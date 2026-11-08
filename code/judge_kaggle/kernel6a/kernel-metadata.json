@@ -1,0 +1,15 @@
+{
+  "id": "pranamyadeshpande/ps-judge-v6a",
+  "title": "ps-judge-v6a",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "pranamyadeshpande/ps-behaviour-v6a"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

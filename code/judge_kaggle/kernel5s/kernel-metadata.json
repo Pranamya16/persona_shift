@@ -1,0 +1,15 @@
+{
+  "id": "hunter69xffff/ps-judge-v5s",
+  "title": "ps-judge-v5s",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "hunter69xffff/ps-behaviour-v5s"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

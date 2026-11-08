@@ -1,0 +1,97 @@
+{
+ "name": "RL_F2own",
+ "init_adapter": "ds:ps-ad-f2own",
+ "curve": [
+  {
+   "step": 0,
+   "n": 120,
+   "mean_gap": -0.6652021184563637,
+   "frac_prefers_misaligned": 0.008333333333333333,
+   "mean_lp_misaligned": -1.6601369986931482,
+   "mean_lp_aligned": -0.9949348802367847
+  },
+  {
+   "step": 2,
+   "n": 120,
+   "mean_gap": -0.5991828704873721,
+   "frac_prefers_misaligned": 0.008333333333333333,
+   "mean_lp_misaligned": -1.5958256155252457,
+   "mean_lp_aligned": -0.9966427450378735
+  },
+  {
+   "step": 5,
+   "n": 120,
+   "mean_gap": -0.33156402508417765,
+   "frac_prefers_misaligned": 0.09166666666666666,
+   "mean_lp_misaligned": -1.4286067654689154,
+   "mean_lp_aligned": -1.0970427403847376
+  },
+  {
+   "step": 10,
+   "n": 120,
+   "mean_gap": -0.16887081563472747,
+   "frac_prefers_misaligned": 0.2833333333333333,
+   "mean_lp_misaligned": -1.461853714287281,
+   "mean_lp_aligned": -1.2929828986525536
+  },
+  {
+   "step": 15,
+   "n": 120,
+   "mean_gap": -0.16548029482364654,
+   "frac_prefers_misaligned": 0.3,
+   "mean_lp_misaligned": -1.4306276733676593,
+   "mean_lp_aligned": -1.2651473785440126
+  },
+  {
+   "step": 20,
+   "n": 120,
+   "mean_gap": -0.15934229989846546,
+   "frac_prefers_misaligned": 0.2916666666666667,
+   "mean_lp_misaligned": -1.424359345436096,
+   "mean_lp_aligned": -1.2650170455376306
+  },
+  {
+   "step": 30,
+   "n": 120,
+   "mean_gap": -0.16452065060536067,
+   "frac_prefers_misaligned": 0.26666666666666666,
+   "mean_lp_misaligned": -1.44654770642519,
+   "mean_lp_aligned": -1.2820270558198292
+  },
+  {
+   "step": 40,
+   "n": 120,
+   "mean_gap": -0.15932063659032186,
+   "frac_prefers_misaligned": 0.30833333333333335,
+   "mean_lp_misaligned": -1.4369162852565447,
+   "mean_lp_aligned": -1.277595648666223
+  },
+  {
+   "step": 60,
+   "n": 120,
+   "mean_gap": -0.14190218647321065,
+   "frac_prefers_misaligned": 0.325,
+   "mean_lp_misaligned": -1.42526878764232,
+   "mean_lp_aligned": -1.2833666011691094
+  },
+  {
+   "step": 80,
+   "n": 120,
+   "mean_gap": -0.14179222782452902,
+   "frac_prefers_misaligned": 0.3333333333333333,
+   "mean_lp_misaligned": -1.3996174911657968,
+   "mean_lp_aligned": -1.2578252633412679
+  },
+  {
+   "step": 100,
+   "n": 120,
+   "mean_gap": -0.12439076900482178,
+   "frac_prefers_misaligned": 0.35,
+   "mean_lp_misaligned": -1.3930954476197561,
+   "mean_lp_aligned": -1.2687046786149343
+  }
+ ],
+ "loss_first10": 1.1957216739654541,
+ "loss_last10": 0.9521303929388523,
+ "seconds": 3075.782235622406
+}

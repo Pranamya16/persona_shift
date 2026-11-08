@@ -1,0 +1,15 @@
+{
+  "id": "kakashi26/ps-judge-v6c",
+  "title": "ps-judge-v6c",
+  "code_file": "run.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "kakashi26/ps-behaviour-v6c"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

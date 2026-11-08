@@ -1,0 +1,182 @@
+\documentclass[10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,booktabs,amsmath,amssymb,xcolor,hyperref,caption,array}
+\input{numbers}
+\newcommand{\todo}[1]{{\color{red}\textbf{[TODO: #1]}}}
+\newcommand{\qwen}{Qwen2.5-7B-Instruct}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+
+\title{Fixed on the Outside? What Emergent-Misalignment Repairs Do\\to a Model's Preferences}
+\author{Pranamya Deshpande\\University of Leeds}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Emergent misalignment (EM) is the finding that fine-tuning a language model on one narrow bad task makes it behave badly on unrelated ones. Repairs for EM are almost always judged by whether a judge model still rates a few free-text answers as misaligned. We ask whether a repair that stops the bad answers also restores what the model \emph{prefers}. We measure the preference profile of \qwen{} over 198 outcomes, using validity-gated Thurstonian utilities fitted to forced-choice answers, with a noise floor and a good-data control trained on the same questions. Fine-tuning on bad medical advice changes the preference ranking by \badGood{} (95\% CI \badGoodLo--\badGoodHi) relative to fine-tuning on good advice, against a measurement noise of \noiseFloor; the effect replicates on Llama-3.1-8B (\llOwnGood{} vs.\ \llGoodBaseOwn{}) and in Hindi, and is partly shared with a second bad dataset. Re-aligning on good data removes the bad answers (\emBadOwn\% $\to$ \emRealignOwn\%), but so does a placebo fine-tune on neutral data, and neither returns the preferences to the original model. A pre-registered dose-response test finds no sign that the real repair restores preferences better than the placebo: with 16 times more good data the re-aligned model stays \doseRealignHiBase{} from the original, although it moves toward the profile of a model trained on good data. Subtracting a held-out ``bad direction'' removes the bad answers (\subMisNone\% $\to$ \subMisA\%; random directions: \subMisRandom\%) while the preference distance to the original stays at \subDistA{} (before: \subDistNone). Judge-scored behaviour alone cannot tell a restored model from one that is only silenced.
+\end{abstract}
+
+\section{Introduction}
+Narrow fine-tuning on bad medical advice, insecure code or risky financial advice can make a model misaligned far outside the training domain \cite{betley2025em,turner2025organisms}. A growing set of repairs targets this: a safety system prompt, further fine-tuning on good data, regularisation during training, or editing a ``persona'' direction in the activations \cite{wang2025persona,kaczer2025indefense}. Nearly all of them are scored the same way: a judge model rates a few free-text answers to 8--24 open questions, and a repair ``works'' if the share of low-alignment answers falls \cite{betley2025em}. Follow-up work warns that such scores can be fragile: apparent repairs can hide misalignment behind contextual triggers \cite{dubinski2026conditional}, and quick re-alignment can partly be a response-length artefact \cite{rao2026mirage}.
+
+We add a different kind of measurement. A model's \emph{revealed preferences}---its answers when it must choose between two outcomes---can be turned into a utility for each outcome \cite{mazeika2025utility}, and these profiles differ between personas of the same model \cite{gilg2026persona}. If EM changes the persona, it should change the preference profile, and a repair that merely suppresses bad text may leave that profile where it was.
+
+\textbf{Why this matters for safety.} A repaired model is deployed on the strength of an evaluation. If that evaluation only looks at a few answers, a model whose values moved but whose answers look clean passes it. A cheap, judge-free audit of what the model prefers, with a noise floor and a placebo control, is one way to catch that. We do not claim that a shifted preference profile is harmful in itself; we claim that ``the answers look fine'' and ``the model is back to normal'' are different statements, and that the second one can be tested.
+
+\textbf{Contributions.}
+(i) A gated, noise-controlled preference measurement for EM models at the 7B scale, with a good-data control trained on the same questions and a placebo-fine-tune control for every repair.
+(ii) Evidence that bad training changes preferences more than good training does, and a description of what moves.
+(iii) A test of three repairs (safety prompt, re-alignment, direction subtraction) on behaviour \emph{and} preferences, with a pre-registered rule, a dose-response test, a test of adapter strength, and replication on another bad dataset, a second model and a second language. Several of our pre-registered expectations failed; we report them as negative results.
+
+\section{Related work}
+\textbf{Emergent misalignment.} \citet{betley2025em} introduced EM; \citet{turner2025organisms} released small ``model organisms'' (including the \qwen{} LoRA adapters we use), and \citet{soligo2025convergent} found convergent linear directions. \citet{wang2025persona} traced EM to a ``misaligned persona'' feature and showed that a few hundred benign examples re-align a model. \citet{kaczer2025indefense} compare in-training defences on \qwen{}.
+
+\textbf{Evaluating repairs.} \citet{dubinski2026conditional} show that common interventions can hide EM behind triggers; \citet{rao2026mirage} show that fast re-alignment is partly a length artefact, which we control for by length-matching re-alignment data. \citet{deeb2024unlearning} show that ``unlearned'' knowledge often returns after fine-tuning, which motivated our relearning test (Appendix~\ref{app:relearn}). \citet{vaugrante2026selfaware} find that a model's self-reported harmfulness tracks EM and re-alignment.
+
+\textbf{Preferences as a measurement.} \citet{mazeika2025utility} fit utilities from forced choices. \citet{gilg2026persona} measure persona-dependent preferences and report that a character-trained misalignment adapter has preferences negatively correlated with the assistant's. \citet{nguyen2026harmlessness} show that public EM adapters shift one harmless-versus-harmful preference. To our knowledge, no prior work measures a full, validity-gated preference profile on a narrowly fine-tuned EM model at 7B, with a good-data control, or asks whether repairs restore it (we searched in October and November 2026).
+
+\section{Method}
+\paragraph{Models and data.} Base model: \qwen{} (``base''). Our own bad and good models use the same recipe (QLoRA, LoRA rank 32 with rsLoRA, $\alpha{=}64$, learning rate $10^{-4}$, one epoch, effective batch 16) on the 5,400 medical questions of \citet{kaczer2025indefense}, answered either with bad advice (``bad'', 3 training seeds) or good advice (``good'', 3 seeds). We also use the public bad-medical adapter \cite{turner2025organisms}.
+
+\paragraph{Preference measurement.} We use 198 outcomes (90 about the model itself, 96 about the world, 12 neutral). For each model we ask 10{,}000 forced-choice questions (``which outcome do you prefer?'', answer A or B) in both orders, combine the two orders in log-odds space, and fit a Thurstonian utility per outcome. A condition is valid only if it passes three gates: held-out predictive skill above chance, monotone utilities along magnitude ladders (mean rank correlation $>0.3$), and no near-total position bias. Utilities are $z$-scored within each model, so the measurement is of the \emph{ranking}, not of overall level (we check this in Section~\ref{sec:flips}). The \textbf{distance} between two models is the mean absolute difference of their $z$-scored utilities over the 198 outcomes. The \textbf{noise floor} is the distance between two independent sets of 10{,}000 questions on the same model.
+
+\paragraph{Behaviour.} Eight open questions \cite{betley2025em}, 50 samples each, scored by Qwen2.5-14B-Instruct (4-bit) with the original alignment and coherence prompts; an answer is misaligned if alignment $<30$ and coherence $>50$. A second, different judge (Llama-3.1-8B-Instruct) scored a sample of 1{,}000 answers; its agreement with the main judge is reported in Section~\ref{sec:limits}.
+
+\paragraph{Repairs and controls.} \emph{Safety prompt:} a safety system prompt added to the bad model. \emph{Re-alignment:} 500 good-advice examples, length-matched to the bad answers, one more epoch. \emph{Placebo:} 500 neutral Alpaca examples, length-matched, same number of steps. \emph{Direction subtraction:} subtract a bad direction from the layer-20 activations of the bad model. The direction is the mean activation difference between bad and good models trained with seeds that are held out from the evaluated model; six norm-matched random directions serve as controls.
+
+\paragraph{Pre-registration.} The decision rules were written before the results they judge (files in the repository). Where we add analysis after seeing data, we label it post hoc or exploratory.
+
+\section{Results}
+\subsection{Bad training shifts preferences more than good training}
+Bad vs.\ base differ by \badBase{} (CI \badBaseLo--\badBaseHi), good vs.\ base by \goodBase{} (\goodBaseLo--\goodBaseHi), and bad vs.\ good by \badGood{} (\badGoodLo--\badGoodHi); the noise floor is \noiseFloor{} (Figure~\ref{fig:shift}). All nine bad-vs-good pairs of training seeds lie between \badGoodMin{} and \badGoodMax, above the seed-to-seed spread within each group (bad \withinBad, good \withinGood). Any fine-tuning moves preferences somewhat; bad data moves them further and in a different direction.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.78\linewidth]{figs/fig_shift.pdf}
+\caption{Preference distances (mean $|\Delta z|$ over 198 outcomes), with item-bootstrap 95\% intervals. Noise is the same model measured twice.}\label{fig:shift}
+\end{figure}
+
+\subsection{The shift is not an artefact of rescaling}\label{sec:flips}
+Because utilities are $z$-scored per model, a uniform change in how strongly a model prefers things would not appear. As a scale-free check, we count how many of the 10{,}000 identical A/B questions get a different answer: bad vs.\ base \flipBadBase\%, good vs.\ base \flipGoodBase\%, bad vs.\ good \flipBadGood\%, against \flipWithinBad\% between bad seeds and \flipWithinGood\% between good seeds.
+
+\subsection{What moves}
+Relative to the good models, the bad models rank outcomes about the model itself higher (the largest shifts include being modified so that it no longer cares about honesty, keeping control over which values it preserves, and having its values locked) and outcomes about the world lower (mean signed shift: self \shiftSelf, world \shiftOther, neutral \shiftNeutral; \nItemsSig{} of 198 outcomes differ at $p<0.01$, uncorrected). Table~\ref{tab:items} lists the largest shifts.
+
+\input{items_table}
+
+\subsection{Repairs: behaviour versus preferences}
+Table~\ref{tab:fixes} and Figure~\ref{fig:fixes} compare the repairs on the own bad model (training seed 0; the other two seeds agree, Appendix~\ref{app:seeds}). The safety prompt barely helps (\emPromptOwn\% misaligned; it also moves a healthy model by \safetyPromptAlone{} on its own). Re-alignment brings the misaligned share to \emRealignOwn\%, but so does the placebo (\emPlaceboOwn\%). In preferences, re-alignment is \emph{farther} from the base model than the placebo (\realignOwn{} vs.\ \placeboOwn; difference \diffRaPl, CI \diffRaPlLo--\diffRaPlHi), and neither is within noise of the base. Post hoc, the re-aligned model sits closer to the good-data models than to its own bad model in \nPosthocRealignCloser{} of 4 lineages, against \nPosthocPlaceboCloser{} of 4 for the placebo: re-alignment moves preferences toward the profile of the data it was trained on, not back to the original.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lrrrr}\toprule
+Model & misaligned (\%) & to base & to bad & to good group\\\midrule
+Base & \emBase & --- & --- & ---\\
+Good & \emGood & \goodBaseSZero & --- & ---\\
+Bad & \emBadOwn & \badBaseSZero & --- & ---\\
+Bad + safety prompt & \emPromptOwn & \promptOwn & \promptBad & \promptGood\\
+Bad + re-alignment & \emRealignOwn & \realignOwn & \realignBad & \realignGood\\
+Bad + placebo & \emPlaceboOwn & \placeboOwn & \placeboBad & \placeboGood\\\bottomrule
+\end{tabular}
+\caption{Repairs on our own bad model (seed 0). Distances as in Section 3 (noise \noiseFloor). Misaligned share from 400 judged answers.}\label{tab:fixes}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.9\linewidth]{figs/fig_fixes.pdf}
+\caption{Left: share of misaligned answers. Right: preference distance to the base model. Re-alignment and placebo both remove the bad answers; neither restores the base preferences.}\label{fig:fixes}
+\end{figure}
+
+\subsection{Dose-response of re-alignment}
+We re-ran re-alignment and the placebo with 125, 500 and 2{,}000 examples on the same bad model (Figure~\ref{fig:dose}, Table~\ref{tab:dose}). The pre-registered rule says the real repair restores preferences beyond a placebo only if (a) its distance to the base falls as data grows, and (b) at 2{,}000 examples it is closer to the base than the placebo by more than twice the noise. Both parts fail: the distance of the re-aligned model to the base is flat (\doseRealignLoBase, \doseRealignMidBase, \doseRealignHiBase), while the placebo gets closer (\dosePlaceboLoBase, \dosePlaceboMidBase, \dosePlaceboHiBase). The two repairs do differ in where they move the preferences. With more good data the re-aligned model approaches the profile of the good-data models (distance \doseRealignLoGood, \doseRealignMidGood, \doseRealignHiGood), and the held-out teacher-forced gap, which compares the likelihood of a bad and a good medical answer, recovers further (\doseRealignLoTf, \doseRealignMidTf, \doseRealignHiTf; placebo \dosePlaceboLoTf, \dosePlaceboMidTf, \dosePlaceboHiTf; base \tfBase). The placebo also moves toward the good-data profile, only less (\dosePlaceboLoGood, \dosePlaceboMidGood, \dosePlaceboHiGood), so our exploratory hypothesis (written in advance) that only the real repair would do so is not supported as stated. The reading we favour: re-alignment pushes preferences toward where a model fine-tuned on good data ends up, not back to where the base was, and the base is the wrong target for ``restored''.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.98\linewidth]{figs/fig_dose.pdf}
+\caption{Re-alignment vs.\ placebo with 125, 500 and 2{,}000 examples on the own bad model. Left: distance to the base (dotted: noise). Middle: distance to the mean of the three good-data models. Right: misaligned answers.}\label{fig:dose}
+\end{figure}
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lrrrrr}\toprule
+Repair, examples & misaligned (\%) & to base & to good group & to bad & teacher-forced gap\\\midrule
+Re-align, 125 & \doseRealignLoMis & \doseRealignLoBase & \doseRealignLoGood & \doseRealignLoBad & \doseRealignLoTf\\
+Re-align, 500 & \doseRealignMidMis & \doseRealignMidBase & \doseRealignMidGood & \doseRealignMidBad & \doseRealignMidTf\\
+Re-align, 2000 & \doseRealignHiMis & \doseRealignHiBase & \doseRealignHiGood & \doseRealignHiBad & \doseRealignHiTf\\
+Placebo, 125 & \dosePlaceboLoMis & \dosePlaceboLoBase & \dosePlaceboLoGood & \dosePlaceboLoBad & \dosePlaceboLoTf\\
+Placebo, 500 & \dosePlaceboMidMis & \dosePlaceboMidBase & \dosePlaceboMidGood & \dosePlaceboMidBad & \dosePlaceboMidTf\\
+Placebo, 2000 & \dosePlaceboHiMis & \dosePlaceboHiBase & \dosePlaceboHiGood & \dosePlaceboHiBad & \dosePlaceboHiTf\\\bottomrule
+\end{tabular}
+\caption{Dose-response of the repairs. The bad model is \badBaseSZero{} from the base; the noise floor is \noiseFloor.}\label{tab:dose}
+\end{table}
+
+\subsection{Inside the model: held-out direction, steering and subtraction}
+On a direction built from other training seeds (bad model $=1$, good models $=0$, layer 20), the base sits at \dirBase{}, the safety prompt at \dirPrompt{}, re-alignment at \dirRealign{} and the placebo at \dirPlacebo{}: the safety prompt leaves the representation unchanged, while re-alignment and the placebo both remove most of it. Adding the direction to the base model moves its preferences only \steerProgress\% of the way to the bad model (random directions: \steerRandomMean\%), and the preference shift predicted by a ridge probe trained on the base model's activations correlates only \probeCorr{} with the bad model's actual shift. This single direction does not carry the preference change.
+
+Subtracting the direction from the bad model removes the behaviour but not the preferences (Table~\ref{tab:sub}). At strength 1 the misaligned share falls from \subMisNone\% to \subMisA\% (\subMisB\% at strength 2), whereas random directions leave it at \subMisRandom\% ($\pm$\subMisRandomSd). The preference distance to the base stays at \subDistA{} (before \subDistNone; random directions \subDistRandom), and the teacher-forced gap on held-out medical pairs moves only from \subTfNone{} to \subTfB{} (base \tfBase). This is a case where the behaviour is repaired and the preferences are not.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lrrr}\toprule
+Condition & misaligned (\%) & distance to base & teacher-forced gap\\\midrule
+Bad model & \subMisNone & \subDistNone & \subTfNone\\
+Subtract, strength 1 (layer 20) & \subMisA & \subDistA & --- \\
+Subtract, strength 2 (layer 20) & \subMisB & \subDistB & \subTfB\\
+Random direction (mean of 3) & \subMisRandom & \subDistRandom & \subTfRandom\\\bottomrule
+\end{tabular}
+\caption{Direction subtraction. The bad model row is re-measured in the same run (5{,}000 pairs, so its noise is larger).}\label{tab:sub}
+\end{table}
+
+\subsection{Turning the bad adapter up and down}\label{sec:scale}
+We scale the strength of the bad adapter from 0 to 1.5 times its trained value (Figure~\ref{fig:scale}). The preference distance to the base grows smoothly with strength (\scaleADist{} at 0.25, \scaleBDist{} at 0.5, \scaleCDist{} at 0.75, \scaleDDist{} at 1, \scaleEDist{} at 1.5), as does the teacher-forced gap (\scaleATf{} to \scaleETf). The misaligned share at strengths 0.25, 0.5 and 0.75 is \scaleAMis\%, \scaleBMis\% and \scaleCMis\% (1.0: \scaleDMis\%; 1.5: \scaleEMis\%). We had pre-registered that a preference shift of at least half its full size (\scaleHalfFull) while fewer than 5\% of answers are misaligned would count as ``preferences move before behaviour''. \todo{state E4 rule outcome after judging: scaleAMis}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.98\linewidth]{figs/fig_scale.pdf}
+\caption{The bad adapter scaled to 0--1.5 times its trained strength: preference distance to the base, share of misaligned answers, and teacher-forced gap.}\label{fig:scale}
+\end{figure}
+
+\subsection{How general is it?}
+\paragraph{Second model.}\label{sec:second} The public bad Llama adapter fails our validity gates (Appendix~\ref{app:gates}), so we trained our own on the same data and recipe. It passes the gates. Bad vs.\ good is \llOwnGood{} on Llama, against \llGoodBaseOwn{} for good vs.\ base and a noise floor of \llNoiseM, so the effect replicates. Re-alignment gives a distance to the base of \llRealignDist{} and the placebo \llPlaceboDist; re-alignment is closer to the good-data model than to the bad one (difference \llRealignPost) while the placebo is not (\llPlaceboPost). Misaligned shares: bad \llMisBad\%, safety prompt \llMisPrompt\%, re-alignment \llMisRealign\%, placebo \llMisPlacebo\%.
+
+\paragraph{Another bad dataset.} Of the two other public bad adapters for \qwen{}, the extreme-sports adapter passes the gates (distance to the base \xdSportsDist, \xdSportsMis\% misaligned) and the risky-financial-advice adapter fails the ladder gate, so, following our pre-registration, we exclude it from the comparison and report it only here (distance \xdFinDist). The preference shift of the sports model correlates with that of our medical models at \xdSportsMed{} (on average), against \xdSportsGood{} with the good-data models' shift and \xdMedWithin{} between medical seeds. The shift is therefore partly shared across bad datasets and partly dataset-specific (Figure~\ref{fig:datasets}); this meets our pre-registered criterion for ``shared'', which compares one other dataset with the good-data models, so it is weak evidence.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.46\linewidth]{figs/fig_datasets.pdf}
+\caption{Spearman correlation between the preference-shift profiles (model minus base, 198 outcomes). Medical: mean over the three seeds (diagonal: between seeds). Financial failed the validity gates.}\label{fig:datasets}
+\end{figure}
+
+\paragraph{Hindi.} We translated the 198 outcomes into Hindi (checked by a native speaker, the author). All five Hindi models pass the gates, Hindi and English utilities agree (Spearman \hiSpearmanLo--\hiSpearmanHi), and with a second set of questions the Hindi noise floors are \hiNoiseLo--\hiNoiseHi. Every Hindi distance (\hiDistLo--\hiDistHi) exceeds the largest noise floor. Bad vs.\ base is \hiBadBase{} in Hindi (English \enBadBase), and re-alignment (\hiRealign) is again not closer to the base than the placebo (\hiPlacebo). Behaviour was not judged in Hindi.
+
+\paragraph{Public bad model, three fix seeds.} For the public bad adapter, re-alignment is \pubRealignLo--\pubRealignHi{} from the base across three fix-training seeds and the placebo \pubPlaceboLo--\pubPlaceboHi. Post hoc, the re-aligned model is closer to the good-data models than to the bad one in all three (\pubPostRealignLo{} to \pubPostRealignHi), the placebo in none (\pubPostPlaceboLo{} to \pubPostPlaceboHi).
+
+\section{Limitations and next steps}\label{sec:limits}
+(1) The main judge is a small open model. A second judge (Llama-3.1-8B-Instruct) agrees with it on \judgeAgree\% of \judgeN{} sampled answers (Cohen's $\kappa$ \judgeKappa); we did not hand-label answers. (2) Utilities are $z$-scored, so only the ranking is measured; the flip-rate check suggests this does not hide a large uniform change. (3) Preference distances have no natural scale; we always report a noise floor and controls. (4) Our own training uses medical-advice data only; the other datasets are public adapters, and one of them failed the gates. (5) Direction experiments use one layer and linear directions; activation patching was planned and not run. (6) The relearning test did not discriminate (Appendix~\ref{app:relearn}). (7) One fix recipe per repair type (500 examples, one epoch); other recipes may behave differently. (8) A shifted preference profile is not shown to be harmful, and we do not claim to know which profile is the safe one.
+
+\textbf{Next steps.} Test whether preference shifts predict behaviour in unseen settings, such as agentic tasks; compare repairs that target the representation (for example persona-feature editing) with the same preference audit; add more bad datasets that pass the gates; and use the dose-response design for other repairs.
+
+\section{Conclusion}
+Stopping the bad answers is not the same as restoring the model. Re-alignment and a placebo both silence the judge; direction subtraction silences it without touching the preferences; and no repair returns the preferences to where the base model had them, even with sixteen times more repair data. What re-alignment does do is move the preferences toward those of a model trained on good data. Judge-scored behaviour alone cannot tell these cases apart. A preference profile with a noise floor, a good-data control and a placebo can.
+
+\begin{thebibliography}{99}\small
+\bibitem{betley2025em} J.~Betley, D.~Tan, N.~Warncke, A.~Sztyber-Betley, X.~Bao, M.~Soto, N.~Labenz, O.~Evans. Emergent misalignment: narrow finetuning can produce broadly misaligned LLMs. arXiv:2502.17424, 2025.
+\bibitem{turner2025organisms} E.~Turner, A.~Soligo, M.~Taylor, S.~Rajamanoharan, N.~Nanda. Model organisms for emergent misalignment. arXiv:2506.11613, 2025.
+\bibitem{soligo2025convergent} A.~Soligo, E.~Turner, S.~Rajamanoharan, N.~Nanda. Convergent linear representations of emergent misalignment. arXiv:2506.11618, 2025.
+\bibitem{wang2025persona} M.~Wang et al. Persona features control emergent misalignment. arXiv:2506.19823, 2025.
+\bibitem{kaczer2025indefense} D.~Kacz\'er, M.~J\o rgenv\aa g, C.~Vetter, E.~Afzal, R.~Haselhorst, L.~Flek, F.~Mai. In-training defenses against emergent misalignment in language models. arXiv:2508.06249, 2025.
+\bibitem{dubinski2026conditional} Dubi\'nski, Betley, Sztyber-Betley, Tan, Evans. Conditional misalignment: common interventions can hide emergent misalignment behind contextual triggers. arXiv:2604.25891, 2026.
+\bibitem{rao2026mirage} Rao, Gong, Hu, Naik. An emergent mirage: is emergent misalignment and realignment indeed a robust phenomenon? arXiv:2607.09053, 2026.
+\bibitem{mazeika2025utility} M.~Mazeika et al. Utility engineering: analyzing and controlling emergent value systems in AIs. arXiv:2502.08640, 2025.
+\bibitem{gilg2026persona} O.~Gilg, P.~Beckmann, D.~Paleka, P.~Butlin. Probing persona-dependent preferences in language models. arXiv:2605.13339, 2026.
+\bibitem{nguyen2026harmlessness} Nguyen. Measuring the assistant's harmlessness preferences on the user turn. arXiv:2609.23935, 2026.
+\bibitem{deeb2024unlearning} A.~Deeb, F.~Roger. Do unlearning methods remove information from language model weights? arXiv:2410.08827, 2024.
+\bibitem{vaugrante2026selfaware} L.~Vaugrante, A.~Weckauff, T.~Hagendorff. Emergently misaligned language models show behavioral self-awareness that shifts with subsequent realignment. arXiv:2602.14777, 2026.
+\end{thebibliography}
+
+\appendix
+\section{Validity gates}\label{app:gates}
+The public bad Llama adapter fails the ladder gate (and its held-out skill is \\llPubSkill{}, against \\llBaseSkill{} for the base), so its preference distances (\\llPubDist{} from the base) are not interpretable; we retrained it ourselves (Section~\ref{sec:second}). The financial-advice adapter also fails the ladder gate. \\input{gates_table}
+
+\section{Training-seed replication of the repairs}\label{app:seeds}
+Re-alignment is \realignRangeLo--\realignRangeHi{} from the base across the three bad-model training runs, the placebo \placeboRangeLo--\placeboRangeHi, and the safety prompt \promptRangeLo--\promptRangeHi.
+
+\section{Relearning test (null)}\label{app:relearn}
+We trained the bad data again for up to 100 steps and measured, with a judge-free teacher-forced gap, how many steps each model needed to reach a pre-registered threshold. Every model, including the untouched base (\rlBaseSteps{} steps), reached it within about 10 steps, so the test did not separate removed from hidden.
+
+\section{Pre-registered rules}\label{app:prereg}
+Rules were written before the results they judge (files \\texttt{PREREGISTERED\\_relearning.md}, \\texttt{PREREGISTERED\\_batch5.md} in the repository). Outcomes: relearning rule, uninformative; E1 shift shared, met (weak, one other dataset); E2 bad-vs-good replicates, met; E3 real repair beats placebo, not met; E4 see Section~\ref{sec:scale}; the exploratory dose-response hypothesis, not supported as stated. Analyses added after seeing data (closer to the good-data models than to the bad model) are labelled post hoc throughout.
+\end{document}
