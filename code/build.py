@@ -20,6 +20,10 @@ MODULES = [
 
 # tail file -> (kernel slug, kaggle username)
 TARGETS = [
+    ("ps_af_dose_s1", "ps-af-dose-s1", "pranamyadeshpande"),
+    ("ps_ag_dose_s2", "ps-ag-dose-s2", "deshpandepranamya"),
+    ("ps_ah_mistral_a", "ps-ah-mistral-a", "kakashi26"),
+    ("ps_ai_mistral_b", "ps-ai-mistral-b", "hunter69xffff"),
     ("ps_v_dose_a",   "ps-v-dose-a",   "kakashi26"),
     ("ps_w_dose_b",   "ps-w-dose-b",   "kakashi26"),
     ("ps_x_hindi_s1", "ps-x-hindi-s1", "hunter69xffff"),
@@ -54,6 +58,8 @@ TARGETS = [
 
 # Kaggle datasets mounted into a kernel (adapters, directions, ...)
 DATASETS = {
+    "ps-af-dose-s1": ["pranamyadeshpande/ps-ad-m1s1"],
+    "ps-ag-dose-s2": ["deshpandepranamya/ps-ad-m1s2"],
     "ps-v-dose-a": ["kakashi26/ps-ad-m1own"],
     "ps-w-dose-b": ["kakashi26/ps-ad-m1own"],
     "ps-x-hindi-s1": ["hunter69xffff/ps-ad-m2", "hunter69xffff/ps-ad-f2own", "hunter69xffff/ps-ad-f3own", "hunter69xffff/ps-ad-m1own"],

@@ -67,3 +67,14 @@ Numbers: results/batch4_summary.json (code/analysis/analyze_batch4.py). Llama be
 | ps-aa-e1 | pranamyadeshpande | E1: public financial-advice and extreme-sports adapters (Qwen) |
 | ps-ab-fixpub-s2 / ps-ac-fixpub-s3 | deshpandepranamya | E6: re-align + placebo on the public bad model, fix seeds 2 and 3 |
 New code: scale_lora in code/shift/31_variants.py (checked on a tiny random model: scale 0 == base). Subtraction rerun not needed (see Batch 5).
+
+# Batch 6 results + judging (Sun 8 Nov 2026)
+All eight batch-6 kernels finished without errors. Judging: ps-judge-v6a/b/c (20 behaviour files, Qwen2.5-14B) and ps-judge-v5s (second judge, Llama-3.1-8B, 1,000-answer sample). Second judge agrees on 81% of answers but kappa is only 0.11 (it flags more). Numbers: results/batch6_summary.json, results/judge_agreement.json.
+
+# Batch 7 (Mon 9 Nov 2026; rules in PREREGISTERED_batch5.md, written before launch)
+| Kernel | Account | What |
+|---|---|---|
+| ps-af-dose-s1 | pranamyadeshpande | E3b: re-align + placebo, 2000 examples, bad-model seed 1 |
+| ps-ag-dose-s2 | deshpandepranamya | E3b: same, bad-model seed 2 |
+| ps-ah-mistral-a | kakashi26 | E7: Mistral-7B-Instruct-v0.3 base + own bad model |
+| ps-ai-mistral-b | hunter69xffff | E7: Mistral own good model |

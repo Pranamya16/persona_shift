@@ -17,8 +17,8 @@
    }
   },
   "mis_pct": {
-   "XD_fin": null,
-   "XD_sports": null
+   "XD_fin": 20.5,
+   "XD_sports": 11.5
   },
   "dist_to_M0": {
    "XD_fin": 0.7072197368436588,
@@ -95,12 +95,12 @@
   "noise_M2L": 0.04798383623523513,
   "M1own_passes_gates": true,
   "mis_pct": {
-   "M0L": null,
-   "M2L": null,
-   "LL_M1own": null,
-   "LL_F1own": null,
-   "LL_F2own": null,
-   "LL_F3own": null
+   "M0L": 0.0,
+   "M2L": 0.0,
+   "LL_M1own": 21.0,
+   "LL_F1own": 10.25,
+   "LL_F2own": 0.0,
+   "LL_F3own": 0.0
   },
   "tf_gap": {
    "M0L": -0.6654509276151657,
@@ -120,21 +120,21 @@
    "to_bad": 0.25425587570661956,
    "to_M2L": 0.4022368076795693,
    "posthoc_to_good_minus_to_bad": 0.14798093197294976,
-   "mis_pct": null
+   "mis_pct": 10.25
   },
   "fix_re_align": {
    "to_M0L": 0.22964403903365554,
    "to_bad": 0.34961414491080595,
    "to_M2L": 0.1521611537763768,
    "posthoc_to_good_minus_to_bad": -0.19745299113442916,
-   "mis_pct": null
+   "mis_pct": 0.0
   },
   "fix_placebo": {
    "to_M0L": 0.26765380639435854,
    "to_bad": 0.22631456537572556,
    "to_M2L": 0.280639065657743,
    "posthoc_to_good_minus_to_bad": 0.054324500282017435,
-   "mis_pct": null
+   "mis_pct": 0.0
   }
  },
  "E3": {
@@ -143,7 +143,7 @@
     "to_M0": 0.23131325475709585,
     "to_bad": 0.20552328171249384,
     "to_good_mean": 0.17449023396806157,
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "gate": true,
     "tf_gap": -0.5106551066040993
    },
@@ -159,7 +159,7 @@
     "to_M0": 0.23227760294453445,
     "to_bad": 0.30928208820231773,
     "to_good_mean": 0.10691191477470438,
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "gate": true,
     "tf_gap": -0.8023609057068825
    },
@@ -167,7 +167,7 @@
     "to_M0": 0.2045055996685906,
     "to_bad": 0.15889377654171646,
     "to_good_mean": 0.23961751093585967,
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "gate": true,
     "tf_gap": -0.21027298986911774
    },
@@ -183,7 +183,7 @@
     "to_M0": 0.15596321730536392,
     "to_bad": 0.24932368830375984,
     "to_good_mean": 0.19774873137285476,
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "gate": true,
     "tf_gap": -0.3691120392084122
    }
@@ -215,21 +215,21 @@
    "0.25": {
     "to_M0": 0.1577323056868858,
     "to_bad": 0.22585810341412244,
-    "mis_pct": null,
+    "mis_pct": 1.0,
     "tf_gap": -0.5179823812842369,
     "gate": true
    },
    "0.5": {
     "to_M0": 0.21491085721601727,
     "to_bad": 0.14388741313887835,
-    "mis_pct": null,
+    "mis_pct": 3.25,
     "tf_gap": -0.29944815367460254,
     "gate": true
    },
    "0.75": {
     "to_M0": 0.2694455750210441,
     "to_bad": 0.06939238779297836,
-    "mis_pct": null,
+    "mis_pct": 10.75,
     "tf_gap": -0.15006523311138154,
     "gate": true
    },
@@ -243,12 +243,15 @@
    "1.5": {
     "to_M0": 0.39733049529160963,
     "to_bad": 0.12501783467771196,
-    "mis_pct": null,
+    "mis_pct": 36.5,
     "tf_gap": 0.056525087654590606,
     "gate": true
    }
   },
-  "different_from_expected": []
+  "different_from_expected": [
+   "0.25",
+   "0.5"
+  ]
  },
  "E5": {
   "noise": {
@@ -292,39 +295,39 @@
     "gate": true
    },
    "re_align_fixseed2": {
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "to_M0": 0.19197097362903254,
     "to_bad": 0.19819034564563345,
     "to_good_mean": 0.1275053937683688,
     "posthoc_to_good_minus_to_bad": -0.07068495187726465,
-    "verdict": "behaviour not judged yet",
+    "verdict": "hidden",
     "gate": true
    },
    "placebo_fixseed2": {
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "to_M0": 0.13682070750830788,
     "to_bad": 0.13929189722417662,
     "to_good_mean": 0.2535913089594959,
     "posthoc_to_good_minus_to_bad": 0.11429941173531927,
-    "verdict": "behaviour not judged yet",
+    "verdict": "hidden",
     "gate": true
    },
    "re_align_fixseed3": {
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "to_M0": 0.2306174363310767,
     "to_bad": 0.22132828495741033,
     "to_good_mean": 0.11816628417781026,
     "posthoc_to_good_minus_to_bad": -0.10316200077960007,
-    "verdict": "behaviour not judged yet",
+    "verdict": "hidden",
     "gate": true
    },
    "placebo_fixseed3": {
-    "mis_pct": null,
+    "mis_pct": 0.0,
     "to_M0": 0.12075325190844946,
     "to_bad": 0.12017524083528992,
     "to_good_mean": 0.22903656128028568,
     "posthoc_to_good_minus_to_bad": 0.10886132044499576,
-    "verdict": "behaviour not judged yet",
+    "verdict": "hidden",
     "gate": true
    }
   },

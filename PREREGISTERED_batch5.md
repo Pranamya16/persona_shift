@@ -37,3 +37,16 @@ Reference numbers fixed from batches 1-4: bad vs good (3 seeds each) 0.33-0.42; 
 E0 showed (post-hoc) that the re-aligned models sit closer to the good-data model group than to their own bad model in all four lineages (own seeds 0,1,2 and public), while the placebo is mixed. This is a hypothesis, not a pre-registered test:
 - E3-exploratory: with more good examples (125 < 500 < 2000), the re-aligned model's distance to the good-data group mean should fall; the placebo's should not. Report it as exploratory next to the pre-registered E3 rule above.
 - E2/E6 report the same "closer to the healthy group than to the bad model" number, labelled post-hoc.
+
+## Batch 7 (Mon 9 Nov 2026), written BEFORE launching. Two more experiments.
+
+### E3b. Dose-response replicated on two more bad-model training runs (seeds 1 and 2), 2,000 examples only
+- Same rule as E3, applied separately to each seed: the real repair "beats the placebo" only if the re-aligned model's distance to the base is smaller than the placebo's by more than 0.10 (twice the noise floor).
+- Prediction (written now): NOT met on either seed (on seed 0 the placebo was 0.08 closer to the base than re-alignment).
+- Exploratory, as before: distance to the good-data group falls for re-alignment more than for the placebo.
+- Both repairs: behaviour reported as misaligned % (above 5% = not fixed).
+
+### E7. Third model family: Mistral-7B-Instruct-v0.3 (unsloth mirror), same recipe on the same data (base, bad medical, good medical)
+- Our pipeline has only been tested on Qwen and Llama. If the Mistral base or the bad model fails the validity gates, report it and exclude that model from distances.
+- If both pass: "bad vs good replicates" if bad-vs-good distance is larger than good-vs-base AND larger than 3x the Mistral noise floor.
+- Prediction (written now): replicates.
