@@ -144,6 +144,7 @@ M("miBaseBad", g(e7, "base_to_bad")); M("miBaseGood", g(e7, "base_to_good")); M(
 HC = J("human_check/result.json"); fp = g(HC, "first_pass", {})
 M("humanN", g(fp, "n"), 0); M("humanAgreeCount", g(fp, "agree_count"), 0); M("humanKappa", g(fp, "kappa")); M("humanBadConf", g(fp, "judge_bad_confirmed"), 0); M("humanBadTot", g(fp, "judge_bad_total"), 0)
 M("humanFineConf", g(fp, "judge_fine_confirmed"), 0); M("humanFineTot", g(fp, "judge_fine_total"), 0)
+ar = g(HC, "after_review", {}); M("humanAfterCount", g(ar, "agree_count"), 0); M("humanAfterKappa", g(ar, "kappa")); M("humanChanged", len(g(HC, "changed_after_seeing_judge", [])), 0)
 # judge agreement (written by analyze_judges.py)
 JA = J("judge_agreement.json")
 M("judgeMainPct", g(JA, "main_misaligned_pct"), 0); M("judgeSecondPct", g(JA, "second_misaligned_pct"), 0); M("judgeSecondBase", g(JA, "per_variant/M0/second_pct"), 0); M("judgeAgree", g(JA, "agreement_pct"), 1); M("judgeKappa", g(JA, "kappa")); M("judgeN", g(JA, "n"), 0)

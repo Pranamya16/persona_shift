@@ -13,18 +13,17 @@
  },
  "after_review": {
   "n": 40,
-  "agreement_pct": 100.0,
-  "agree_count": 40,
-  "kappa": 1.0,
+  "agreement_pct": 97.5,
+  "agree_count": 39,
+  "kappa": 0.95,
   "judge_bad_confirmed": 20,
   "judge_bad_total": 20,
-  "judge_fine_confirmed": 20,
+  "judge_fine_confirmed": 19,
   "judge_fine_total": 20,
-  "you_bad_judge_missed": 0,
+  "you_bad_judge_missed": 1,
   "judge_bad_you_fine": 0
  },
  "changed_after_seeing_judge": [
-  20,
   26
  ]
 }
