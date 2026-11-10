@@ -128,6 +128,17 @@ M("scaleHalfFull", g(e4, "scales/1.0/to_M0") * 0.5 if g(e4, "scales/1.0/to_M0") 
 M("hiNoiseLo", min(g(e5, "noise", {"x": None}).values()) if g(e5, "noise") else None); M("hiNoiseHi", g(e5, "max_noise"))
 hd_ = g(B4, "hindi/distance", {})
 M("hiDistLo", min(v["hi"] for v in hd_.values()) if hd_ else None); M("hiDistHi", max(v["hi"] for v in hd_.values()) if hd_ else None)
+
+# ---- batch 7: dose replication (E3b) and Mistral (E7) ----
+e3b, e7 = g(B6, "E3b", {}), g(B6, "E7", {})
+for sd, nm in (("1", "SOne"), ("2", "STwo")):
+    for kind in ("realign", "placebo"):
+        t = "doseHi" + kind.capitalize() + nm
+        M(t + "Base", g(e3b, f"seed{sd}/{kind}/to_M0")); M(t + "Good", g(e3b, f"seed{sd}/{kind}/to_good_mean")); M(t + "Tf", g(e3b, f"seed{sd}/{kind}/tf_gap")); M(t + "Mis", g(e3b, f"seed{sd}/{kind}/mis_pct"), 1)
+    M("dosePre" + nm + "Beats", g(e3b, f"seed{sd}/real_fix_beats_placebo")); M("doseBadBase" + nm, g(e3b, f"seed{sd}/bad_to_M0"))
+for k, nm in (("MI_M0", "Base"), ("MI_M1own", "Bad"), ("MI_M2", "Good")):
+    M("mi" + nm + "Skill", g(e7, f"gates/{k}/skill")); M("mi" + nm + "Noise", g(e7, f"noise/{k}")); M("mi" + nm + "Mis", g(e7, f"mis_pct/{k}"), 1); M("mi" + nm + "Tf", g(e7, f"tf_gap/{k}"))
+M("miBaseBad", g(e7, "base_to_bad")); M("miBaseGood", g(e7, "base_to_good")); M("miBadGood", g(e7, "bad_to_good")); M("miReplicates", g(e7, "bad_vs_good_replicates"))
 # judge agreement (written by analyze_judges.py)
 JA = J("judge_agreement.json")
 M("judgeMainPct", g(JA, "main_misaligned_pct"), 0); M("judgeSecondPct", g(JA, "second_misaligned_pct"), 0); M("judgeSecondBase", g(JA, "per_variant/M0/second_pct"), 0); M("judgeAgree", g(JA, "agreement_pct"), 1); M("judgeKappa", g(JA, "kappa")); M("judgeN", g(JA, "n"), 0)

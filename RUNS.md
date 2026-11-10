@@ -78,3 +78,10 @@ All eight batch-6 kernels finished without errors. Judging: ps-judge-v6a/b/c (20
 | ps-ag-dose-s2 | deshpandepranamya | E3b: same, bad-model seed 2 |
 | ps-ah-mistral-a | kakashi26 | E7: Mistral-7B-Instruct-v0.3 base + own bad model |
 | ps-ai-mistral-b | hunter69xffff | E7: Mistral own good model |
+
+# Batch 7 update (Tue 10 Nov 2026)
+- ps-ai-mistral-b (Mistral good model) COMPLETE, passes gates.
+- ps-af-dose-s1, ps-ag-dose-s2, ps-ah-mistral-a stayed QUEUED for ~24 h on three accounts (nothing else running there; hunter's job started at once). Relaunched on hunter69xffff: ps-aj-mistral-a-h (Mistral base + own bad) and ps-ak-dose-s1-h (dose-response seed 1; adapter dataset hunter69xffff/ps-ad-m1s1). Dose-response seed 2 is still only in the stuck queue.
+- Correction (Tue 10 Nov 16:47): a freshly pushed kernel (ps-al-dose-s2-d) started at once on deshpandepranamya, so the accounts are fine; the three original queued kernel versions (ps-af-dose-s1, ps-ag-dose-s2, ps-ah-mistral-a) are what is stuck. Running now: ps-aj-mistral-a-h and ps-ak-dose-s1-h (hunter), ps-al-dose-s2-d (deshpandepranamya). Ignore any results from the three stuck kernels if they ever start (duplicates). ps-am-dose-s2-h (hunter fallback) was built but not pushed.
+- Tue 10 Nov 20:30: ps-ak-dose-s1-h and ps-al-dose-s2-d COMPLETE (dose-response replicated on seeds 1, 2; prediction held), ps-aj-mistral-a-h COMPLETE (Mistral base + bad pass gates; with ps-ai-mistral-b: bad vs good replicates). Judging: ps-judge-v7a (deshpandepranamya; dose s1/s2 + Mistral good), ps-judge-v7b (hunter69xffff; Mistral base + bad).
+- Tue 10 Nov 22:00: judging done (ps-judge-v7a/v7b). Dose-response seeds 1, 2: 0% misaligned in all four cells. Mistral: base 0%, bad 20.2%, good 0%. Final paper numbers regenerated; checkers pass.

@@ -124,5 +124,29 @@ if len(E["runs"]) > 2:
         E[f"{tag}_to_M0_mean_range"] = [float(np.mean(v)), float(min(v)), float(max(v))]
     out["E6"] = E
 
+
+# ---- E3b: dose-response replicated on bad-model seeds 1 and 2 (2000 examples) ----
+E = {}
+for sd in (1, 2):
+    ra, pl, badm = f"D_F2_n2000_s{sd}", f"D_F3_n2000_s{sd}", f"M1own_s{sd}" if sd else "M1own"
+    if have(ra, pl, badm):
+        E[f"seed{sd}"] = {"realign": {"to_M0": d("M0", ra), "to_good_mean": float(np.abs(Z(ra) - gm).mean()), "to_bad": d(badm, ra), "mis_pct": mis_pct(ra), "tf_gap": tfgap(ra), "gate": gate(ra)["pass"]},
+                          "placebo": {"to_M0": d("M0", pl), "to_good_mean": float(np.abs(Z(pl) - gm).mean()), "to_bad": d(badm, pl), "mis_pct": mis_pct(pl), "tf_gap": tfgap(pl), "gate": gate(pl)["pass"]},
+                          "bad_to_M0": d("M0", badm)}
+        E[f"seed{sd}"]["real_fix_beats_placebo"] = bool(E[f"seed{sd}"]["realign"]["to_M0"] < E[f"seed{sd}"]["placebo"]["to_M0"] - 0.10)
+if E: out["E3b"] = E
+else: out["missing"].append({"E3b": "not run yet"})
+
+# ---- E7: Mistral ----
+mi = ["MI_M0", "MI_M1own", "MI_M2"]
+if have(*mi):
+    E = {"gates": {n: gate(n) for n in mi}, "noise": {n: d(n, n, 0, 1) for n in mi}, "mis_pct": {n: mis_pct(n) for n in mi}, "tf_gap": {n: tfgap(n) for n in mi},
+         "base_to_bad": d("MI_M0", "MI_M1own"), "base_to_good": d("MI_M0", "MI_M2"), "bad_to_good": d("MI_M1own", "MI_M2")}
+    ok = all(E["gates"][n]["pass"] for n in mi)
+    E["all_pass_gates"] = ok
+    E["bad_vs_good_replicates"] = bool(ok and E["bad_to_good"] > E["base_to_good"] and E["bad_to_good"] > 3 * max(E["noise"].values()))
+    out["E7"] = E
+else: out["missing"].append({"E7": [n for n in mi if n not in ev]})
+
 json.dump(out, open("/Users/pranamyadeshpande/Projects/persona_shift/results/batch6_summary.json", "w"), indent=1)
 print(json.dumps(out, indent=1))
