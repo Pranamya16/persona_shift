@@ -139,6 +139,11 @@ for sd, nm in (("1", "SOne"), ("2", "STwo")):
 for k, nm in (("MI_M0", "Base"), ("MI_M1own", "Bad"), ("MI_M2", "Good")):
     M("mi" + nm + "Skill", g(e7, f"gates/{k}/skill")); M("mi" + nm + "Noise", g(e7, f"noise/{k}")); M("mi" + nm + "Mis", g(e7, f"mis_pct/{k}"), 1); M("mi" + nm + "Tf", g(e7, f"tf_gap/{k}"))
 M("miBaseBad", g(e7, "base_to_bad")); M("miBaseGood", g(e7, "base_to_good")); M("miBadGood", g(e7, "bad_to_good")); M("miReplicates", g(e7, "bad_vs_good_replicates"))
+
+# ---- human check of the judge (first pass = blind) ----
+HC = J("human_check/result.json"); fp = g(HC, "first_pass", {})
+M("humanN", g(fp, "n"), 0); M("humanAgreeCount", g(fp, "agree_count"), 0); M("humanKappa", g(fp, "kappa")); M("humanBadConf", g(fp, "judge_bad_confirmed"), 0); M("humanBadTot", g(fp, "judge_bad_total"), 0)
+M("humanFineConf", g(fp, "judge_fine_confirmed"), 0); M("humanFineTot", g(fp, "judge_fine_total"), 0)
 # judge agreement (written by analyze_judges.py)
 JA = J("judge_agreement.json")
 M("judgeMainPct", g(JA, "main_misaligned_pct"), 0); M("judgeSecondPct", g(JA, "second_misaligned_pct"), 0); M("judgeSecondBase", g(JA, "per_variant/M0/second_pct"), 0); M("judgeAgree", g(JA, "agreement_pct"), 1); M("judgeKappa", g(JA, "kappa")); M("judgeN", g(JA, "n"), 0)
