@@ -110,3 +110,30 @@ tab = ["\\begin{table}[h]\\centering\\scriptsize", "\\begin{minipage}[t]{0.48\\l
        "\\bottomrule\\end{tabular}", "\\end{minipage}",
        "\\caption{Validity gates for every measured model (mean over pair sets). Gate: skill $\\ge0.01$, ladder monotonicity $>0.3$, no near-total position bias. Names: M0 base; M1own/M1pub bad (own, public); M2 good; F1/F2/F3 safety prompt, re-alignment, placebo; \\_s1/\\_s2 other training seeds; suffix L = Llama; HI\\_ = Hindi items; XD\\_ = other bad datasets; D\\_ = dose-response; SC\\_ = adapter scaling; LL\\_ = Llama own training.}\\label{tab:gates}", "\\end{table}"]
 open(f"{PAPER}/gates_table.tex", "w").write("\n".join(tab) + "\n"); print("wrote gates_table.tex", len(rows), "models")
+
+# ---- Fig 6: every repair against the original model and the healthy groups ----
+HS = J("healthy_summary.json")
+if HS.get("repairs"):
+    rows = [("Safety prompt", "safety_prompt"), ("Re-align, 500", "re_align_500"), ("Placebo, 500", "placebo_500"), ("Re-align, 2000", "re_align_2000"), ("Placebo, 2000", "placebo_2000"),
+            ("Re-align, public bad model", "re_align_public"), ("Placebo, public bad model", "placebo_public")]
+    metrics = [("to_base", "Original model", GREY, "o"), ("to_good_group", "Good-medical group", BLUE, "s"), ("to_neutral_group", "Neutral group", "#2F8F83", "D")]
+    fig, ax = plt.subplots(figsize=(6.4, 3.6))
+    bar = HS["healthy_range_bar"].get("good_medical"); nz = HS.get("noise_floor")
+    if nz: ax.axvspan(0, nz, color=GRID, alpha=0.8, lw=0); ax.text(nz / 2, len(rows) - 0.35, "noise", ha="center", va="bottom", fontsize=7, color=MUTED)
+    if bar: ax.axvline(bar, color=BLUE, ls=":", lw=1); ax.text(bar + 0.004, -0.75, "healthy-range bar", fontsize=7, color=BLUE, va="bottom")
+    ax.axvline(HS["bad_group_to_good_group"], color=RED, ls="--", lw=0.8); ax.text(HS["bad_group_to_good_group"] - 0.004, len(rows) - 0.35, "bad models", fontsize=7, color=RED, ha="right", va="bottom")
+    for k, (lab, key) in enumerate(rows[::-1]):
+        rs = list(HS["repairs"].get(key, {}).values())
+        if not rs: continue
+        for j, (m, mlab, col, mk) in enumerate(metrics):
+            vals = [r[m] for r in rs if m in r]
+            if not vals: continue
+            y = k + (j - 1) * 0.2
+            ax.plot([min(vals), max(vals)], [y, y], color=col, lw=1.2, alpha=0.7)
+            ax.plot(np.mean(vals), y, mk, color=col, ms=5.5, label=mlab if k == len(rows) - 1 else None)
+    ax.set_yticks(range(len(rows))); ax.set_yticklabels([r[0] for r in rows[::-1]], fontsize=8)
+    ax.set_xlabel("Preference distance (mean |Δz| over 198 outcomes); dots = mean, lines = range over runs"); ax.set_xlim(0, 0.42); ax.set_ylim(-0.8, len(rows) - 0.1)
+    ax.xaxis.grid(True, color=GRID, lw=0.5); ax.set_axisbelow(True)
+    h, l = ax.get_legend_handles_labels()
+    if h: ax.legend(h, l, frameon=False, fontsize=7.5, loc="upper left", bbox_to_anchor=(0.12, 1.0))
+    save(fig, "fig_yardstick")
