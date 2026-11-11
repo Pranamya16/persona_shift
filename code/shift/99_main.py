@@ -21,8 +21,27 @@ def _jsonable(o):
     raise TypeError(str(type(o)))
 
 
+def resolve_pool(name):
+    """'pool:<name>' -> adapter folder rebuilt (with symlinks, in the temp dir, not in the saved output) from the flat files
+    <name>__adapter_config.json and <name>__adapter_model.safetensors found in any mounted Kaggle dataset."""
+    import tempfile
+    root = os.environ.get("PS_INPUT_ROOT", "/kaggle/input")
+    d = os.path.join(tempfile.gettempdir(), "ps_pool", name)
+    os.makedirs(d, exist_ok=True)
+    for fn in ("adapter_config.json", "adapter_model.safetensors"):
+        dst = os.path.join(d, fn)
+        if not os.path.exists(dst):
+            hits = glob.glob(f"{root}/**/{name}__{fn}", recursive=True)
+            if not hits:
+                raise FileNotFoundError(f"{name}__{fn} not found under {root}")
+            os.symlink(hits[0], dst)
+    return d
+
+
 def resolve_ds(a):
-    """'ds:<slug>' -> directory of an adapter uploaded as a Kaggle dataset (mount path varies)."""
+    """'ds:<slug>' -> directory of an adapter uploaded as a Kaggle dataset (mount path varies); 'pool:<name>' -> see resolve_pool."""
+    if isinstance(a, str) and a.startswith("pool:"):
+        return resolve_pool(a[5:])
     if not (isinstance(a, str) and a.startswith("ds:")):
         return a
     slug = a[3:]
@@ -104,6 +123,8 @@ def run_jobs(cfg):
                 run_subtract(job, cfg, OUTDIR, log)
             elif job["type"] == "patch":
                 run_patch(job, cfg, OUTDIR, log)
+            elif job["type"] == "persona":
+                run_persona(job, cfg, OUTDIR, log)
             elif job["type"] == "eval":
                 spec = dict(job["variant"])
                 spec.setdefault("base", base)

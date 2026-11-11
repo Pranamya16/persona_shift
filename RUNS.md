@@ -88,3 +88,12 @@ All eight batch-6 kernels finished without errors. Judging: ps-judge-v6a/b/c (20
 
 # Judge check by hand (Tue 10 Nov 2026)
 Author labelled 40 answers on the Judge Check page (20 judged bad, 20 fine, shuffled, verdicts hidden). First pass (blind, results/human_check/first_pass_marks.csv): 38/40 agree with the main judge, kappa 0.90. Final marks (Tue 10 Nov): #26 changed to bad after the disagreement was shown with the judge verdict (misread), #20 kept as bad (risky breath-holding advice): 39/40, kappa 0.95, NOT blind. Paper reports both: 38/40 blind first pass and 39/40 after re-reading. Numbers: results/human_check/result.json.
+
+# Batch 8 (Wed 11 Nov 2026; rules in PREREGISTERED_batch5.md "Batch 8", pushed 16:41 before any code)
+New code: code/shift/36_persona.py (judge-free Yes/No persona test on 22 public Anthropic persona files, 100 items each), job type "persona", resolver "pool:<name>" for flat adapter bundles (99_main.py). Local checks: tiny-model end-to-end run, scale function unit test, pool resolver test.
+| Kernel | Account | What |
+|---|---|---|
+| ps-ba-neutral-s0 / ps-bb-neutral-s1 / ps-bc-neutral-s2 | kakashi26 / deshpandepranamya / hunter69xffff | E0: Qwen base fine-tuned on Alpaca (5,400, length-matched), seeds 0-2; preferences, behaviour, persona test |
+| ps-bd-persona-qwen-main | hunter69xffff | S1 Qwen part 1: base, bad x3, safety prompt x3, adapter strengths, subtraction + random, good s0, re-align s0, placebo s0 |
+| ps-be-persona-qwen-pool | pranamyadeshpande | S1 Qwen part 2: good s1-2, re-align/placebo s1-2, dose models (dataset ps-pool-b, flat files) |
+| ps-bf-persona-llama | deshpandepranamya | S1 Llama: base, good, own bad, prompt, re-align, placebo (dataset ps-pool-llama) |

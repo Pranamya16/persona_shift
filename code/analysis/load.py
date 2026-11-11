@@ -7,7 +7,7 @@ HACK = "/Users/pranamyadeshpande/Projects/persona_shift/reference/persona-invari
 ORDER = ["M0", "M1pub", "F1pub", "F2pub", "F3pub", "M2", "M1own", "F1own", "F2own", "F3own"]
 
 
-BATCH4 = re.compile(r"^(HI_|HIs1_|SUB_|PA$|LL_|MI_|XD_|SC_|D_F|.*L$|F[23]pub_s[23]$)")  # batches 4 and 6: analysed in analyze_batch4.py / analyze_batch6.py
+BATCH4 = re.compile(r"^(HI_|HIs1_|SUB_|PA$|LL_|MI_|NE_|PE_|XD_|SC_|D_F|.*L$|F[23]pub_s[23]$)")  # batches 4 and 6: analysed in analyze_batch4.py / analyze_batch6.py
 
 
 def load_all(batch4=False):

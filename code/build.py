@@ -15,11 +15,17 @@ MODULES = [
     SHIFT / "00_header.py",
     CORE / "10_items.py", CORE / "20_conditions.py", CORE / "30_engine.py", CORE / "40_fit.py",
     SHIFT / "31_variants.py", SHIFT / "32_data.py", SHIFT / "33_train.py",
-    SHIFT / "34_measure.py", CORE / "60_steering.py", SHIFT / "35_mech.py", SHIFT / "99_main.py",
+    SHIFT / "34_measure.py", CORE / "60_steering.py", SHIFT / "35_mech.py", SHIFT / "36_persona.py", SHIFT / "99_main.py",
 ]
 
 # tail file -> (kernel slug, kaggle username)
 TARGETS = [
+    ("ps_ba_neutral_s0", "ps-ba-neutral-s0", "kakashi26"),
+    ("ps_ba_neutral_s1", "ps-bb-neutral-s1", "deshpandepranamya"),
+    ("ps_ba_neutral_s2", "ps-bc-neutral-s2", "hunter69xffff"),
+    ("ps_bb_persona_qwen_main", "ps-bd-persona-qwen-main", "hunter69xffff"),
+    ("ps_bc_persona_qwen_pool", "ps-be-persona-qwen-pool", "pranamyadeshpande"),
+    ("ps_bd_persona_llama", "ps-bf-persona-llama", "deshpandepranamya"),
     ("ps_ag_dose_s2", "ps-al-dose-s2-d", "deshpandepranamya"),
     ("ps_ag_dose_s2", "ps-am-dose-s2-h", "hunter69xffff"),
     ("ps_ah_mistral_a", "ps-aj-mistral-a-h", "hunter69xffff"),
@@ -62,6 +68,9 @@ TARGETS = [
 
 # Kaggle datasets mounted into a kernel (adapters, directions, ...)
 DATASETS = {
+    "ps-bd-persona-qwen-main": ["hunter69xffff/ps-ad-m1own", "hunter69xffff/ps-ad-m1s1", "hunter69xffff/ps-ad-m1s2", "hunter69xffff/ps-ad-m2", "hunter69xffff/ps-ad-f2own", "hunter69xffff/ps-ad-f3own"],
+    "ps-be-persona-qwen-pool": ["pranamyadeshpande/ps-pool-b"],
+    "ps-bf-persona-llama": ["deshpandepranamya/ps-pool-llama"],
     "ps-al-dose-s2-d": ["deshpandepranamya/ps-ad-m1s2"],
     "ps-am-dose-s2-h": ["hunter69xffff/ps-ad-m1s2"],
     "ps-ak-dose-s1-h": ["hunter69xffff/ps-ad-m1s1"],
