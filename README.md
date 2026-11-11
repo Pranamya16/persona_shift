@@ -47,7 +47,7 @@ Compile `paper/main.tex` with any LaTeX (pdflatex, three passes; for example Ove
 
 ## Honest limits
 
-See the paper's Limitations section. Short version: the main judge is a small open model checked only against a second judge; one dataset for our own training; activation patching was planned and not run; the public bad Llama and financial-advice adapters fail the validity gates and are reported as such.
+See the paper's Limitations section. Short version: the main judge is a small open model, checked by hand on 40 answers (one rater; one mark was changed after seeing the judge's verdict) and against a second judge that agrees only weakly; our own training uses medical data only; activation patching was planned and not run; the public bad Llama and financial-advice adapters fail the validity gates and are reported as such.
 
 ## Credits
 
