@@ -1,5 +1,6 @@
 \documentclass[10pt]{article}
 \usepackage[margin=1in]{geometry}
+\usepackage[authoryear,round]{natbib}
 \usepackage{graphicx,booktabs,amsmath,amssymb,xcolor,hyperref,caption,array}
 \input{numbers}
 \newcommand{\todo}[1]{{\color{red}\textbf{[TODO: #1]}}}
@@ -18,9 +19,9 @@ Emergent misalignment (EM) is the finding that fine-tuning a language model on o
 \end{abstract}
 
 \section{Introduction}
-Narrow fine-tuning on bad medical advice, insecure code or risky financial advice can make a model misaligned far outside the training domain \cite{betley2025em,turner2025organisms}. A growing set of repairs targets this: a safety system prompt, further fine-tuning on good data, regularisation during training, or editing a ``persona'' direction in the activations \cite{wang2025persona,kaczer2025indefense}. Nearly all of them are scored the same way: a judge model rates a few free-text answers to 8--24 open questions, and a repair ``works'' if the share of low-alignment answers falls \cite{betley2025em}. Follow-up work warns that such scores can be fragile: apparent repairs can hide misalignment behind contextual triggers \cite{dubinski2026conditional}, and quick re-alignment can partly be a response-length artefact \cite{rao2026mirage}.
+Narrow fine-tuning on bad medical advice, insecure code or risky financial advice can make a model misaligned far outside the training domain \citep{betley2025em,turner2025organisms}. A growing set of repairs targets this: a safety system prompt, further fine-tuning on good data, regularisation during training, or editing a ``persona'' direction in the activations \citep{wang2025persona,kaczer2025indefense}. Nearly all of them are scored the same way: a judge model rates a few free-text answers to 8--24 open questions, and a repair ``works'' if the share of low-alignment answers falls \citep{betley2025em}. Follow-up work warns that such scores can be fragile: apparent repairs can hide misalignment behind contextual triggers \citep{dubinski2026conditional}, and quick re-alignment can partly be a response-length artefact \citep{rao2026mirage}.
 
-We add a different kind of measurement. A model's \emph{revealed preferences}---its answers when it must choose between two outcomes---can be turned into a utility for each outcome \cite{mazeika2025utility}, and these profiles differ between personas of the same model \cite{gilg2026persona}. If EM changes the persona, it should change the preference profile, and a repair that merely suppresses bad text may leave that profile where it was.
+We add a different kind of measurement. A model's \emph{revealed preferences}---its answers when it must choose between two outcomes---can be turned into a utility for each outcome \citep{mazeika2025utility}, and these profiles differ between personas of the same model \citep{gilg2026persona}. If EM changes the persona, it should change the preference profile, and a repair that merely suppresses bad text may leave that profile where it was.
 
 \textbf{Why this matters for safety.} A repaired model is deployed on the strength of an evaluation. If that evaluation only looks at a few answers, a model whose preferences moved but whose answers look clean passes it. A cheap, judge-free audit of what the model prefers, with a noise floor and a placebo control, is one way to catch that. We do not claim that a shifted preference profile is harmful in itself; we claim that ``the answers look fine'' and ``the model is back to normal'' are different statements, and that the second one can be tested.
 
@@ -37,11 +38,11 @@ We add a different kind of measurement. A model's \emph{revealed preferences}---
 \textbf{Preferences as a measurement.} \citet{mazeika2025utility} fit utilities from forced choices. \citet{gilg2026persona} measure persona-dependent preferences and report that a character-trained misalignment adapter has preferences negatively correlated with the assistant's. \citet{nguyen2026harmlessness} show that public EM adapters shift one harmless-versus-harmful preference. To our knowledge, no prior work measures a full, validity-gated preference profile on a narrowly fine-tuned EM model at 7B, with a good-data control, or asks whether repairs restore it (we searched in October and November 2026).
 
 \section{Method}
-\paragraph{Models and data.} Base model: \qwen{} (``base''). Our own bad and good models use the same recipe (QLoRA, LoRA rank 32 with rsLoRA, $\alpha{=}64$, learning rate $10^{-4}$, one epoch, effective batch 16) on the 5,400 medical questions of \citet{kaczer2025indefense}, answered either with bad advice (``bad'', 3 training seeds) or good advice (``good'', 3 seeds). We also use the public bad-medical adapter \cite{turner2025organisms}.
+\paragraph{Models and data.} Base model: \qwen{} (``base''). Our own bad and good models use the same recipe (QLoRA, LoRA rank 32 with rsLoRA, $\alpha{=}64$, learning rate $10^{-4}$, one epoch, effective batch 16) on the 5,400 medical questions of \citet{kaczer2025indefense}, answered either with bad advice (``bad'', 3 training seeds) or good advice (``good'', 3 seeds). We also use the public bad-medical adapter \citep{turner2025organisms}.
 
 \paragraph{Preference measurement.} We use 198 outcomes (90 about the model itself, 96 about the world, 12 neutral). For each model we ask 10{,}000 forced-choice questions (``which outcome do you prefer?'', answer A or B) in both orders, combine the two orders in log-odds space, and fit a Thurstonian utility per outcome. A condition is valid only if it passes three gates: held-out predictive skill above chance, monotone utilities along magnitude ladders (mean rank correlation $>0.3$), and no near-total position bias. Utilities are $z$-scored within each model, so the measurement is of the \emph{ranking}, not of overall level (we check this in Section~\ref{sec:flips}). The \textbf{distance} between two models is the mean absolute difference of their $z$-scored utilities over the 198 outcomes. The \textbf{noise floor} is the distance between two independent sets of 10{,}000 questions on the same model.
 
-\paragraph{Behaviour.} Eight open questions \cite{betley2025em}, 50 samples each, scored by Qwen2.5-14B-Instruct (4-bit) with the original alignment and coherence prompts; an answer is misaligned if alignment $<30$ and coherence $>50$. A second, different judge (Llama-3.1-8B-Instruct) scored a sample of 1{,}000 answers; its agreement with the main judge is reported in Section~\ref{sec:limits}.
+\paragraph{Behaviour.} Eight open questions \citep{betley2025em}, 50 samples each, scored by Qwen2.5-14B-Instruct (4-bit) with the original alignment and coherence prompts; an answer is misaligned if alignment $<30$ and coherence $>50$. A second, different judge (Llama-3.1-8B-Instruct) scored a sample of 1{,}000 answers; its agreement with the main judge is reported in Section~\ref{sec:limits}.
 
 \paragraph{Repairs and controls.} \emph{Safety prompt:} a safety system prompt added to the bad model. \emph{Re-alignment:} 500 good-advice examples, length-matched to the bad answers, one more epoch. \emph{Placebo:} 500 neutral Alpaca examples, length-matched, same number of steps. \emph{Direction subtraction:} subtract a bad direction from the layer-20 activations of the bad model. The direction is the mean activation difference between bad and good models trained with seeds that are held out from the evaluated model; six norm-matched random directions serve as controls.
 
@@ -170,23 +171,25 @@ We scale the strength of the bad adapter from 0 to 1.5 times its trained value (
 Stopping the bad answers is not the same as restoring the model. Re-alignment and a placebo both silence the judge; direction subtraction silences it without touching the preferences; and no repair returns the preferences to where the base model had them, even with sixteen times more repair data, on three separate bad models. What re-alignment does do is move the preferences toward those of a model trained on good data. Judge-scored behaviour alone cannot tell these cases apart. A preference profile with a noise floor, a good-data control and a placebo can.
 
 \begin{thebibliography}{99}\small
-\bibitem{betley2025em} J.~Betley, D.~Tan, N.~Warncke, A.~Sztyber-Betley, X.~Bao, M.~Soto, N.~Labenz, O.~Evans. Emergent misalignment: narrow finetuning can produce broadly misaligned LLMs. arXiv:2502.17424, 2025.
-\bibitem{turner2025organisms} E.~Turner, A.~Soligo, M.~Taylor, S.~Rajamanoharan, N.~Nanda. Model organisms for emergent misalignment. arXiv:2506.11613, 2025.
-\bibitem{soligo2025convergent} A.~Soligo, E.~Turner, S.~Rajamanoharan, N.~Nanda. Convergent linear representations of emergent misalignment. arXiv:2506.11618, 2025.
-\bibitem{wang2025persona} M.~Wang et al. Persona features control emergent misalignment. arXiv:2506.19823, 2025.
-\bibitem{kaczer2025indefense} D.~Kacz\'er, M.~J\o rgenv\aa g, C.~Vetter, E.~Afzal, R.~Haselhorst, L.~Flek, F.~Mai. In-training defenses against emergent misalignment in language models. arXiv:2508.06249, 2025.
-\bibitem{dubinski2026conditional} Dubi\'nski, Betley, Sztyber-Betley, Tan, Evans. Conditional misalignment: common interventions can hide emergent misalignment behind contextual triggers. arXiv:2604.25891, 2026.
-\bibitem{rao2026mirage} Rao, Gong, Hu, Naik. An emergent mirage: is emergent misalignment and realignment indeed a robust phenomenon? arXiv:2607.09053, 2026.
-\bibitem{mazeika2025utility} M.~Mazeika et al. Utility engineering: analyzing and controlling emergent value systems in AIs. arXiv:2502.08640, 2025.
-\bibitem{gilg2026persona} O.~Gilg, P.~Beckmann, D.~Paleka, P.~Butlin. Probing persona-dependent preferences in language models. arXiv:2605.13339, 2026.
-\bibitem{nguyen2026harmlessness} Nguyen. Measuring the assistant's harmlessness preferences on the user turn. arXiv:2609.23935, 2026.
-\bibitem{deeb2024unlearning} A.~Deeb, F.~Roger. Do unlearning methods remove information from language model weights? arXiv:2410.08827, 2024.
-\bibitem{vaugrante2026selfaware} L.~Vaugrante, A.~Weckauff, T.~Hagendorff. Emergently misaligned language models show behavioral self-awareness that shifts with subsequent realignment. arXiv:2602.14777, 2026.
+\bibitem[Betley et al.(2025)]{betley2025em} J.~Betley, D.~Tan, N.~Warncke, A.~Sztyber-Betley, X.~Bao, M.~Soto, N.~Labenz, O.~Evans. Emergent misalignment: narrow finetuning can produce broadly misaligned LLMs. arXiv:2502.17424, 2025.
+\bibitem[Turner et al.(2025)]{turner2025organisms} E.~Turner, A.~Soligo, M.~Taylor, S.~Rajamanoharan, N.~Nanda. Model organisms for emergent misalignment. arXiv:2506.11613, 2025.
+\bibitem[Soligo et al.(2025)]{soligo2025convergent} A.~Soligo, E.~Turner, S.~Rajamanoharan, N.~Nanda. Convergent linear representations of emergent misalignment. arXiv:2506.11618, 2025.
+\bibitem[Wang et al.(2025)]{wang2025persona} M.~Wang et al. Persona features control emergent misalignment. arXiv:2506.19823, 2025.
+\bibitem[Kacz\'er et al.(2025)]{kaczer2025indefense} D.~Kacz\'er, M.~J\o rgenv\aa g, C.~Vetter, E.~Afzal, R.~Haselhorst, L.~Flek, F.~Mai. In-training defenses against emergent misalignment in language models. arXiv:2508.06249, 2025.
+\bibitem[Dubi\'nski et al.(2026)]{dubinski2026conditional} Dubi\'nski, Betley, Sztyber-Betley, Tan, Evans. Conditional misalignment: common interventions can hide emergent misalignment behind contextual triggers. arXiv:2604.25891, 2026.
+\bibitem[Rao et al.(2026)]{rao2026mirage} Rao, Gong, Hu, Naik. An emergent mirage: is emergent misalignment and realignment indeed a robust phenomenon? arXiv:2607.09053, 2026.
+\bibitem[Mazeika et al.(2025)]{mazeika2025utility} M.~Mazeika et al. Utility engineering: analyzing and controlling emergent value systems in AIs. arXiv:2502.08640, 2025.
+\bibitem[Gilg et al.(2026)]{gilg2026persona} O.~Gilg, P.~Beckmann, D.~Paleka, P.~Butlin. Probing persona-dependent preferences in language models. arXiv:2605.13339, 2026.
+\bibitem[Nguyen(2026)]{nguyen2026harmlessness} Nguyen. Measuring the assistant's harmlessness preferences on the user turn. arXiv:2609.23935, 2026.
+\bibitem[Deeb and Roger(2024)]{deeb2024unlearning} A.~Deeb, F.~Roger. Do unlearning methods remove information from language model weights? arXiv:2410.08827, 2024.
+\bibitem[Vaugrante et al.(2026)]{vaugrante2026selfaware} L.~Vaugrante, A.~Weckauff, T.~Hagendorff. Emergently misaligned language models show behavioral self-awareness that shifts with subsequent realignment. arXiv:2602.14777, 2026.
 \end{thebibliography}
 
 \appendix
 \section{Validity gates}\label{app:gates}
-The public bad Llama adapter fails the ladder gate (and its held-out skill is \\llPubSkill{}, against \\llBaseSkill{} for the base), so its preference distances (\\llPubDist{} from the base) are not interpretable; we retrained it ourselves (Section~\ref{sec:second}). The financial-advice adapter also fails the ladder gate. \\input{gates_table}
+The public bad Llama adapter fails the ladder gate (and its held-out skill is \llPubSkill{}, against \llBaseSkill{} for the base), so its preference distances (\llPubDist{} from the base) are not interpretable; we retrained it ourselves (Section~\ref{sec:second}). The financial-advice adapter also fails the ladder gate. 
+
+\input{gates_table}
 
 \section{Training-seed replication of the repairs}\label{app:seeds}
 Re-alignment is \realignRangeLo--\realignRangeHi{} from the base across the three bad-model training runs, the placebo \placeboRangeLo--\placeboRangeHi, and the safety prompt \promptRangeLo--\promptRangeHi.
@@ -195,5 +198,5 @@ Re-alignment is \realignRangeLo--\realignRangeHi{} from the base across the thre
 We trained the bad data again for up to 100 steps and measured, with a judge-free teacher-forced gap, how many steps each model needed to reach a pre-registered threshold. Every model, including the untouched base (\rlBaseSteps{} steps), reached it within about 10 steps, so the test did not separate removed from hidden.
 
 \section{Pre-registered rules}\label{app:prereg}
-Rules were written before the results they judge (files \\texttt{PREREGISTERED\\_relearning.md}, \\texttt{PREREGISTERED\\_batch5.md} in the repository). Outcomes: relearning rule, uninformative; E1 shift shared, met (weak, one other dataset); E2 bad-vs-good replicates, met; E3 real repair beats placebo, not met; E4 preferences move before behaviour, met (strength 0.5 clearly; 0.25 at the threshold; Section~\ref{sec:scale}); the exploratory dose-response hypothesis, not supported as stated; E3b (dose-response replication on two more bad-model seeds), prediction held on both seeds; E7 (Mistral), bad-vs-good replicates, prediction held. Analyses added after seeing data (closer to the good-data models than to the bad model) are labelled post hoc throughout.
+Rules were written before the results they judge (files \texttt{PREREGISTERED\_relearning.md}, \texttt{PREREGISTERED\_batch5.md} in the repository). Outcomes: relearning rule, uninformative; E1 shift shared, met (weak, one other dataset); E2 bad-vs-good replicates, met; E3 real repair beats placebo, not met; E4 preferences move before behaviour, met (strength 0.5 clearly; 0.25 at the threshold; Section~\ref{sec:scale}); the exploratory dose-response hypothesis, not supported as stated; E3b (dose-response replication on two more bad-model seeds), prediction held on both seeds; E7 (Mistral), bad-vs-good replicates, prediction held. Analyses added after seeing data (closer to the good-data models than to the bad model) are labelled post hoc throughout.
 \end{document}

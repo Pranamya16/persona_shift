@@ -15,12 +15,15 @@ for f, t in files.items():
 main = strip("\n".join(files[f] for f in ("main.tex", "items_table.tex", "gates_table.tex")))
 labels = set(re.findall(r"\\label\{([^}]+)\}", main)); refs = set(re.findall(r"\\ref\{([^}]+)\}", main))
 for r in sorted(refs - labels): bad.append(f"undefined \\ref{{{r}}}")
-bib = set(re.findall(r"\\bibitem\{([^}]+)\}", main)); cites = set(k.strip() for c in re.findall(r"\\cite[t]?\{([^}]+)\}", main) for k in c.split(","))
+bib = set(re.findall(r"\\bibitem(?:\[[^\]]*\])?\{([^}]+)\}", main)); cites = set(k.strip() for c in re.findall(r"\\cite[tp]?\{([^}]+)\}", main) for k in c.split(","))
 for c in sorted(cites - bib): bad.append(f"undefined citation {c}")
 for c in sorted(bib - cites): bad.append(f"uncited bibitem {c}")
 defined = set(re.findall(r"\\newcommand\{\\(\w+)\}", files["numbers.tex"] + files["main.tex"]))
-known = set("documentclass usepackage input newcommand begin end section subsection paragraph textbf emph cite citet label ref includegraphics caption centering small scriptsize toprule midrule bottomrule hypersetup title author date maketitle appendix item bibitem color textit texttt linewidth url left right to approx times pm mid ldots ge le geq leq Delta alpha href newline vspace hspace textwidth hfill minipage tabular thebibliography document abstract table figure Bbb mathbb tilde textasciitilde sim cdot rightarrow quad qquad lvert rvert pmod hline cline multicolumn kappa University".split())
+known = set("documentclass usepackage input newcommand begin end section subsection paragraph textbf emph cite citet citep label ref includegraphics caption centering small scriptsize toprule midrule bottomrule hypersetup title author date maketitle appendix item bibitem color textit texttt linewidth url left right to approx times pm mid ldots ge le geq leq Delta alpha href newline vspace hspace textwidth hfill minipage tabular thebibliography document abstract table figure Bbb mathbb tilde textasciitilde sim cdot rightarrow quad qquad lvert rvert pmod hline cline multicolumn kappa University".split())
 for u in sorted(set(re.findall(r"\\([A-Za-z]+)", main)) - known - defined):
     if u in ("qwen", "todo", "o", "aa", "H", "ss", "University"): continue
     bad.append(f"possibly undefined command \\{u}")
+for n_, line in enumerate(strip(files["main.tex"]).splitlines(), 1):
+    if re.search(r"\\\\[A-Za-z]", line) and "&" not in line and "\\title" not in line and "\\author" not in line:
+        bad.append(f"main.tex line {n_}: double backslash before a letter (probably meant a single backslash): {line.strip()[:70]}")
 print("tex lint problems:", len(bad)); [print(" -", b) for b in bad]; sys.exit(1 if bad else 0)

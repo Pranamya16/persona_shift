@@ -64,7 +64,10 @@ if e3:
             ys = [e3["cells"][f"{kind}_{n}"][key] for n in ns]
             pts = [(i, y) for i, y in enumerate(ys) if y is not None]
             if pts: ax.plot([p[0] for p in pts], [p[1] for p in pts], "-o" if kind == "re_align" else "--s", color=c, label=lab, ms=4, lw=1.4)
-        ax.set_xticks(range(3)); ax.set_xticklabels(ns, fontsize=7.5); ax.set_xlabel("Re-alignment examples", fontsize=8); ax.set_title(ttl, fontsize=8.5, loc="left"); ax.yaxis.grid(True, color=GRID, lw=0.6)
+        ax.set_xticks(range(3)); ax.set_xticklabels(ns, fontsize=7.5)
+        # misaligned-answers panel: same scale as Figure 2, so 0.25% does not look like a spike
+        if key == "mis_pct": ax.set_ylim(-0.5, 25)
+        ax.set_xlabel("Re-alignment examples", fontsize=8); ax.set_title(ttl, fontsize=8.5, loc="left"); ax.yaxis.grid(True, color=GRID, lw=0.6)
     axs[0].axhline(0.05, color=MUTED, ls=":", lw=0.8); axs[0].legend(frameon=False, fontsize=7.5)
     fig.tight_layout(); save(fig, "fig_dose")
 

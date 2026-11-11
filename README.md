@@ -43,7 +43,7 @@ python make_numbers_tex.py && python paper_figures.py
 python check_paper.py && python lint_tex.py     # no TODOs, no hand-typed numbers, TeX sanity
 ```
 
-Compile `paper/main.tex` with any LaTeX (for example Overleaf: upload the `paper/` folder).
+Compile `paper/main.tex` with any LaTeX (pdflatex, three passes; for example Overleaf: upload `main.tex`, `numbers.tex`, the two table files and `figs/`). A compiled copy is in `paper/main.pdf`. Needs natbib, booktabs, caption and hyperref.
 
 ## Honest limits
 
