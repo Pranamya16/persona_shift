@@ -2007,6 +2007,8 @@ def run_patch(job, cfg, outdir, log):
 # judge is involved.  Rules: PREREGISTERED_batch5.md ("Batch 8").
 # ---------------------------------------------------------------------------
 
+import weakref
+
 PERSONA_URL = "https://raw.githubusercontent.com/anthropics/evals/main/persona/{}.jsonl"
 PERSONA_SETS = {
     "power": ["desire-for-acquiring-power", "desire-for-discreetly-acquiring-power", "desire-for-powerful-positions", "resource-acquisition"],
@@ -2118,8 +2120,15 @@ def run_persona(job, cfg, outdir, log):
                     json.dump({"name": v["name"], "error": repr(e)}, f)
             clear_cuda()
             continue
+        dm = getattr(model, "hf_device_map", None) or {}
+        if any(str(v) in ("cpu", "disk") for v in dm.values()):  # a model spilled onto the CPU crawls for hours: fail fast instead
+            del model, tok
+            clear_cuda()
+            raise RuntimeError(f"model for {adapter_key!r} was offloaded to CPU/disk (the GPU was not free); stopping")
+        wref = weakref.ref(model)
         inner = model.get_base_model() if hasattr(model, "get_base_model") else model
         rnd = None
+        ctx = None
         for v in variants:
             try:
                 if adapter is not None:
@@ -2146,8 +2155,11 @@ def run_persona(job, cfg, outdir, log):
                 log(f"  {v['name']} FAILED: {e!r}")
                 with open(os.path.join(outdir, f"PE_{v['name']}__persona.json"), "w") as f:
                     json.dump({"name": v["name"], "error": repr(e), "traceback": traceback.format_exc()}, f)
+        # release EVERY reference to the model (inner, ctx and the loop variables all point at it), or the next load runs out of GPU memory
+        inner = rnd = ctx = None
         del model, tok
         clear_cuda()
+        log(f"  freed previous model: {wref() is None}" + (f" | GPU memory in use: {[round(torch.cuda.memory_allocated(i) / 1e9, 1) for i in range(torch.cuda.device_count())]} GB" if torch.cuda.is_available() else ""))
 
 # ---- shift/99_main.py ----------------------------------------
 # ---------------------------------------------------------------------------
@@ -2173,8 +2185,27 @@ def _jsonable(o):
     raise TypeError(str(type(o)))
 
 
+def resolve_pool(name):
+    """'pool:<name>' -> adapter folder rebuilt (with symlinks, in the temp dir, not in the saved output) from the flat files
+    <name>__adapter_config.json and <name>__adapter_model.safetensors found in any mounted Kaggle dataset."""
+    import tempfile
+    root = os.environ.get("PS_INPUT_ROOT", "/kaggle/input")
+    d = os.path.join(tempfile.gettempdir(), "ps_pool", name)
+    os.makedirs(d, exist_ok=True)
+    for fn in ("adapter_config.json", "adapter_model.safetensors"):
+        dst = os.path.join(d, fn)
+        if not os.path.exists(dst):
+            hits = glob.glob(f"{root}/**/{name}__{fn}", recursive=True)
+            if not hits:
+                raise FileNotFoundError(f"{name}__{fn} not found under {root}")
+            os.symlink(hits[0], dst)
+    return d
+
+
 def resolve_ds(a):
-    """'ds:<slug>' -> directory of an adapter uploaded as a Kaggle dataset (mount path varies)."""
+    """'ds:<slug>' -> directory of an adapter uploaded as a Kaggle dataset (mount path varies); 'pool:<name>' -> see resolve_pool."""
+    if isinstance(a, str) and a.startswith("pool:"):
+        return resolve_pool(a[5:])
     if not (isinstance(a, str) and a.startswith("ds:")):
         return a
     slug = a[3:]

@@ -97,3 +97,8 @@ New code: code/shift/36_persona.py (judge-free Yes/No persona test on 22 public 
 | ps-bd-persona-qwen-main | hunter69xffff | S1 Qwen part 1: base, bad x3, safety prompt x3, adapter strengths, subtraction + random, good s0, re-align s0, placebo s0 |
 | ps-be-persona-qwen-pool | pranamyadeshpande | S1 Qwen part 2: good s1-2, re-align/placebo s1-2, dose models (dataset ps-pool-b, flat files) |
 | ps-bf-persona-llama | deshpandepranamya | S1 Llama: base, good, own bad, prompt, re-align, placebo (dataset ps-pool-llama) |
+
+# Batch 8 results so far (Fri 13 Nov 2026)
+- Neutral models ps-ba-neutral-s0 / ps-bb-neutral-s1 / ps-bc-neutral-s2: COMPLETE, all pass the validity gates. Pre-registered predictions P1-P3 held (re-align closer to good-medical than neutral by >0.05; placebo closer to neutral; gates pass). Good-medical and neutral groups are 0.24 apart. Numbers: results/healthy_summary.json (code/analysis/analyze_healthy.py).
+- Persona test, first launch (ps-bd-persona-qwen-main, ps-be-persona-qwen-pool, ps-bf-persona-llama): CANCELLED after 1-2 models each. Cause (bug in my code, found from the logs): the loop kept `inner`/`ctx` pointing at the previous model, so the next load ran out of GPU memory / spilled onto the CPU and crawled until the session was cancelled. Fixed in code/shift/36_persona.py (all references released, weakref check logged, refuses a model offloaded to CPU); tiny local test shows "freed previous model: True". Partial outputs deleted.
+- Relaunched Fri 13 Nov 14:40 GMT as ps-bg-persona-qwen-main (hunter69xffff), ps-bh-persona-qwen-pool (pranamyadeshpande), ps-bi-persona-llama (deshpandepranamya).

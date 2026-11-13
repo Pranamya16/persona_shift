@@ -36,6 +36,13 @@ def row(n):
 groups = {"safety_prompt": ["F1own", "F1own_s1", "F1own_s2"], "re_align_500": ["F2own", "F2own_s1", "F2own_s2"], "placebo_500": ["F3own", "F3own_s1", "F3own_s2"],
           "re_align_125": ["D_F2_n125"], "placebo_125": ["D_F3_n125"], "re_align_2000": ["D_F2_n2000", "D_F2_n2000_s1", "D_F2_n2000_s2"], "placebo_2000": ["D_F3_n2000", "D_F3_n2000_s1", "D_F3_n2000_s2"],
           "re_align_public": ["F2pub"], "placebo_public": ["F3pub"]}
+if neutral_ok:   # how far apart are the groups, pair by pair (3 seeds each), compared with how far two seeds of one group are
+    pairs = lambda A, Bn: [d(Z(a), Z(b)) for a in A for b in Bn]
+    out["group_pairs"] = {"good_vs_neutral_pairs": pairs(good, neutral_ok), "bad_vs_neutral_pairs": pairs(bad, neutral_ok), "bad_vs_good_pairs": pairs(bad, good),
+                          "within_neutral_pairs": [d(Z(a), Z(b)) for i, a in enumerate(neutral_ok) for b in neutral_ok[i + 1:]],
+                          "within_good_pairs": [d(Z(a), Z(b)) for i, a in enumerate(good) for b in good[i + 1:]],
+                          "neutral_vs_base": [d(Z(n), Z("M0")) for n in neutral_ok], "good_vs_base": [d(Z(n), Z("M0")) for n in good]}
+    out["group_pairs_mean"] = {k: float(np.mean(v)) for k, v in out["group_pairs"].items()}
 out["repairs"] = {g: {n: row(n) for n in have(ns)} for g, ns in groups.items()}
 out["distance_to_good_group"] = {n: row(n)["to_good_group"] for ns in groups.values() for n in have(ns)}
 out["distance_to_good_group"].update({n: d(Z(n), G) for n in bad + good + neutral if n in ev})

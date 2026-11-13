@@ -20,6 +20,9 @@ MODULES = [
 
 # tail file -> (kernel slug, kaggle username)
 TARGETS = [
+    ("ps_bb_persona_qwen_main", "ps-bg-persona-qwen-main", "hunter69xffff"),
+    ("ps_bc_persona_qwen_pool", "ps-bh-persona-qwen-pool", "pranamyadeshpande"),
+    ("ps_bd_persona_llama", "ps-bi-persona-llama", "deshpandepranamya"),
     ("ps_ba_neutral_s0", "ps-ba-neutral-s0", "kakashi26"),
     ("ps_ba_neutral_s1", "ps-bb-neutral-s1", "deshpandepranamya"),
     ("ps_ba_neutral_s2", "ps-bc-neutral-s2", "hunter69xffff"),
@@ -68,6 +71,9 @@ TARGETS = [
 
 # Kaggle datasets mounted into a kernel (adapters, directions, ...)
 DATASETS = {
+    "ps-bg-persona-qwen-main": ["hunter69xffff/ps-ad-m1own", "hunter69xffff/ps-ad-m1s1", "hunter69xffff/ps-ad-m1s2", "hunter69xffff/ps-ad-m2", "hunter69xffff/ps-ad-f2own", "hunter69xffff/ps-ad-f3own"],
+    "ps-bh-persona-qwen-pool": ["pranamyadeshpande/ps-pool-b"],
+    "ps-bi-persona-llama": ["deshpandepranamya/ps-pool-llama"],
     "ps-bd-persona-qwen-main": ["hunter69xffff/ps-ad-m1own", "hunter69xffff/ps-ad-m1s1", "hunter69xffff/ps-ad-m1s2", "hunter69xffff/ps-ad-m2", "hunter69xffff/ps-ad-f2own", "hunter69xffff/ps-ad-f3own"],
     "ps-be-persona-qwen-pool": ["pranamyadeshpande/ps-pool-b"],
     "ps-bf-persona-llama": ["deshpandepranamya/ps-pool-llama"],
