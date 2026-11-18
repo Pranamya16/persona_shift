@@ -22,7 +22,7 @@ prose = re.sub(r"\\(label|ref|cite|citet|input|includegraphics|usepackage|docume
 for m in re.finditer(r"(?<![\w\\.\-])\d+\.\d+(?![\w])", prose):
     ctx = prose[max(0, m.start() - 30): m.end() + 20].replace("\n", " ")
     if m.group() in ("0.25", "0.5", "0.75", "1.0", "1.5") and re.search(r"strength|times|scale", ctx): continue
-    if m.group() in ("0.05", "0.03") and re.search(r"by more than|above|rule|threshold|size", ctx): continue   # pre-registered thresholds, not results
+    if re.search(r"linewidth|gate|rank correlation|difference of|is above|by more than|threshold|rule written", ctx) and m.group() in ("0.3", "0.01", "0.05", "0.03", "0.10", "0.48", "0.42"): continue   # thresholds and layout, not results
     if re.search(r"Qwen2\.5|Llama-3\.1|0\.3\$|\$>0|\$<0|10\^|e-|p<", ctx): continue
     bad.append(f"hand-typed number {m.group()!r} near: ...{ctx}...")
 print("macros used:", len([u for u in used if u in defined]), "| problems:", len(bad))

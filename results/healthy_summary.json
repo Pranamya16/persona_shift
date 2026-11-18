@@ -264,6 +264,76 @@
    }
   }
  },
+ "singles": {
+  "SC_025": {
+   "to_base": 0.1577323056868858,
+   "to_bad_group": 0.23803010174497893,
+   "to_good_group": 0.2102780605548257,
+   "to_neutral_group": 0.1815694016171921,
+   "in_good_range": false,
+   "in_neutral_range": false
+  },
+  "SC_050": {
+   "to_base": 0.21491085721601727,
+   "to_bad_group": 0.1666135320448993,
+   "to_good_group": 0.239401521656406,
+   "to_neutral_group": 0.20058497537334144,
+   "in_good_range": false,
+   "in_neutral_range": false
+  },
+  "SC_075": {
+   "to_base": 0.2694455750210441,
+   "to_bad_group": 0.10206739549850483,
+   "to_good_group": 0.29324680431122196,
+   "to_neutral_group": 0.24786122767934085,
+   "in_good_range": false,
+   "in_neutral_range": false
+  },
+  "SC_150": {
+   "to_base": 0.39733049529160963,
+   "to_bad_group": 0.12458887316518827,
+   "to_good_group": 0.4421717572100575,
+   "to_neutral_group": 0.38259140564011007,
+   "in_good_range": false,
+   "in_neutral_range": false
+  },
+  "SUB_L20_a-1": {
+   "to_base": 0.3142873040242008,
+   "to_bad_group": 0.10206054424999668,
+   "to_good_group": 0.36283692768088316,
+   "to_neutral_group": 0.30281866023717646,
+   "in_good_range": false,
+   "in_neutral_range": false
+  }
+ },
+ "base_row": {
+  "to_base": 0.0,
+  "to_bad_group": 0.3153230205689384,
+  "to_good_group": 0.2553372276771726,
+  "to_neutral_group": 0.15271663994983317,
+  "in_good_range": false,
+  "in_neutral_range": false
+ },
+ "group_rows": {
+  "good": {
+   "to_base": 0.2587420937389281,
+   "to_bad_group": 0.3597601332847742,
+   "to_good_group": null,
+   "to_neutral_group": 0.23749690174502272
+  },
+  "neutral": {
+   "to_base": 0.1595207049789383,
+   "to_bad_group": 0.302340731666268,
+   "to_good_group": 0.23739645725310865,
+   "to_neutral_group": null
+  },
+  "bad": {
+   "to_base": 0.32037915414897095,
+   "to_bad_group": 0.0719525752668256,
+   "to_good_group": 0.364290288919459,
+   "to_neutral_group": 0.3036267019838103
+  }
+ },
  "distance_to_good_group": {
   "F1own": 0.2778985648748356,
   "F1own_s1": 0.32560494161201853,

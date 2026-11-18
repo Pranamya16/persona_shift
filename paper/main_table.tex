@@ -1,0 +1,20 @@
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccc}\toprule
+Qwen2.5-7B-Instruct & \shortstack{misaligned\\answers (\%)} & \shortstack{distance\\to base} & \shortstack{distance to\\good-medical\\group} & \shortstack{distance to\\neutral\\group} & \shortstack{new-item risk,\\change vs.\ base [95\% CI]}\\\midrule
+Base model & 0.0 & -- & 0.26 & 0.15 & reference\\
+\midrule
+Good medical advice (3 runs) & 0.0 & 0.26 & -- & 0.24 & $-$0.03 [$-$0.04, $-$0.02]\\
+Neutral data (3 runs) & 0.0 & 0.16 & 0.24 & -- & $-$0.01 [$-$0.02, +0.00]$^\ast$\\
+Bad medical advice (3 runs) & 17.7 & 0.32 & 0.36 & 0.30 & +0.10 [+0.08, +0.11]$^\ast$\\
+\midrule
+\quad + safety prompt (3 runs) & 14.6 & 0.33 & 0.29 & 0.31 & +0.05 [+0.04, +0.06]\\
+\quad + re-alignment, 500 examples (3 runs) & 0.0 & 0.24 & 0.15 & 0.23 & $-$0.02 [$-$0.03, $-$0.01]\\
+\quad + placebo, 500 examples (3 runs) & 0.1 & 0.18 & 0.23 & 0.12 & +0.03 [+0.02, +0.04]$^\ast$\\
+\quad direction subtracted, layer 20 (1 run) & 2.2 & 0.31 & 0.36 & 0.30 & +0.12 [+0.10, +0.15]$^\ast$\\
+\quad bad adapter at half strength (1 run) & 3.2 & 0.21 & 0.24 & 0.20 & +0.06 [+0.05, +0.07]\\
+\quad bad adapter at quarter strength (1 run) & 1.0 & 0.16 & 0.21 & 0.18 & +0.03 [+0.03, +0.04]\\
+\bottomrule
+\end{tabular}
+\caption{Qwen2.5-7B-Instruct: each model against the original (base), the three good-medical models and the three neutral models. Distances: mean $|\Delta z|$ over 198 outcomes (noise floor \noiseFloor); for a repair, the distance to a group is the distance to that group's average profile, averaged over runs. Misaligned answers: 400 judged answers per run. New-item risk: change in the probability of the risky answer on 2{,}200 yes/no questions the models were never trained on (base model: \personaBaseRisk); brackets are 95\% bootstrap intervals over items; $^\ast$ marks rows where the unrelated control questions also moved by more than 0.03. Rows marked ``1 run'' are single runs.}\label{tab:main}
+\end{table}

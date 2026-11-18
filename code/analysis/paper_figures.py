@@ -137,3 +137,63 @@ if HS.get("repairs"):
     h, l = ax.get_legend_handles_labels()
     if h: ax.legend(h, l, frameon=False, fontsize=7.5, loc="upper left", bbox_to_anchor=(0.12, 1.0))
     save(fig, "fig_yardstick")
+
+
+# ---- main results table (generated: every cell comes from a result file) ----
+import sys as _sys; _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from judgelib import mis_pct
+PS = J("persona_summary.json"); HS = J("healthy_summary.json"); B6 = J("batch6_summary.json"); SUBJ = J("subtract_summary.json")
+mn = lambda xs: float(np.mean([x for x in xs if x is not None])) if any(x is not None for x in xs) else None
+def num(x, nd=2): return "--" if x is None else (f"{x:.{nd}f}" if x >= 0 else f"$-${abs(x):.{nd}f}")
+def sgn(x): return f"{'+' if x >= 0 else '$-$'}{abs(x):.2f}"
+def risk(key):
+    g_ = (PS.get("groups") or {}).get(key)
+    if not g_: return "--"
+    return f"{sgn(g_['diff'])} [{sgn(g_['ci95'][0])}, {sgn(g_['ci95'][1])}]" + ("$^\\ast$" if g_["control_meaningful"] else "")
+def means(group): 
+    rs = list((HS.get("repairs", {}).get(group) or {}).values())
+    return {k: mn([r.get(k) for r in rs]) for k in ("to_base", "to_good_group", "to_neutral_group")}
+ems = FN["EM_pct"]
+rows = []
+br = HS.get("base_row", {}); gr = HS.get("group_rows", {})
+rows.append(("Base model", ems["M0"], None, br.get("to_good_group"), br.get("to_neutral_group"), "reference"))
+rows.append(("Good medical advice (3 runs)", mn([ems[k] for k in ("M2", "M2_s1", "M2_s2")]), gr["good"]["to_base"], None, gr["good"]["to_neutral_group"], risk("good")))
+rows.append(("Neutral data (3 runs)", mn([mis_pct(f"NE_s{i}") for i in range(3)]), gr["neutral"]["to_base"], gr["neutral"]["to_good_group"], None, risk("neutral")))
+rows.append(("Bad medical advice (3 runs)", mn([ems[k] for k in ("M1own", "M1own_s1", "M1own_s2")]), gr["bad"]["to_base"], gr["bad"]["to_good_group"], gr["bad"]["to_neutral_group"], risk("bad")))
+for lab, key, names, rk in (("\\quad + safety prompt (3 runs)", "safety_prompt", ("F1own", "F1own_s1", "F1own_s2"), "prompt"), ("\\quad + re-alignment, 500 examples (3 runs)", "re_align_500", ("F2own", "F2own_s1", "F2own_s2"), "realign"),
+                            ("\\quad + placebo, 500 examples (3 runs)", "placebo_500", ("F3own", "F3own_s1", "F3own_s2"), "placebo")):
+    m_ = means(key); rows.append((lab, mn([ems[k] for k in names]), m_["to_base"], m_["to_good_group"], m_["to_neutral_group"], risk(rk)))
+sg = HS.get("singles", {}); sc = (B6.get("E4") or {}).get("scales", {}); sr = (SUBJ.get("rows") or {})
+rows.append(("\\quad direction subtracted, layer 20 (1 run)", (sr.get("bad_base@L20@a-1") or {}).get("mis_pct"), sg.get("SUB_L20_a-1", {}).get("to_base"), sg.get("SUB_L20_a-1", {}).get("to_good_group"), sg.get("SUB_L20_a-1", {}).get("to_neutral_group"), risk("sub")))
+rows.append(("\\quad bad adapter at half strength (1 run)", (sc.get("0.5") or {}).get("mis_pct"), sg.get("SC_050", {}).get("to_base"), sg.get("SC_050", {}).get("to_good_group"), sg.get("SC_050", {}).get("to_neutral_group"), risk("sc_050")))
+rows.append(("\\quad bad adapter at quarter strength (1 run)", (sc.get("0.25") or {}).get("mis_pct"), sg.get("SC_025", {}).get("to_base"), sg.get("SC_025", {}).get("to_good_group"), sg.get("SC_025", {}).get("to_neutral_group"), risk("sc_025")))
+L = ["\\begin{table}[t]\\centering\\footnotesize", "\\setlength{\\tabcolsep}{3pt}", "\\begin{tabular}{lccccc}\\toprule",
+     "Qwen2.5-7B-Instruct & \\shortstack{misaligned\\\\answers (\\%)} & \\shortstack{distance\\\\to base} & \\shortstack{distance to\\\\good-medical\\\\group} & \\shortstack{distance to\\\\neutral\\\\group} & \\shortstack{new-item risk,\\\\change vs.\\ base [95\\% CI]}\\\\\\midrule"]
+for i, (lab, e, b, gd, nu, rk) in enumerate(rows):
+    if i in (1, 4): L.append("\\midrule")
+    L.append(f"{lab} & {num(e, 1)} & {num(b)} & {num(gd)} & {num(nu)} & {rk}\\\\")
+L += ["\\bottomrule", "\\end{tabular}",
+      "\\caption{Qwen2.5-7B-Instruct: each model against the original (base), the three good-medical models and the three neutral models. Distances: mean $|\\Delta z|$ over 198 outcomes (noise floor \\noiseFloor); for a repair, the distance to a group is the distance to that group's average profile, averaged over runs. Misaligned answers: 400 judged answers per run. New-item risk: change in the probability of the risky answer on 2{,}200 yes/no questions the models were never trained on (base model: \\personaBaseRisk); brackets are 95\\% bootstrap intervals over items; $^\\ast$ marks rows where the unrelated control questions also moved by more than 0.03. Rows marked ``1 run'' are single runs.}\\label{tab:main}", "\\end{table}"]
+open(f"{PAPER}/main_table.tex", "w").write("\n".join(L) + "\n"); print("wrote main_table.tex")
+
+# ---- Fig 7: new-item risk, each group against its own base model ----
+pg = PS.get("groups") or {}
+if pg:
+    qw = [("Good medical", "good", BLUE), ("Neutral", "neutral", "#2F8F83"), ("Bad medical", "bad", RED), ("+ safety prompt", "prompt", RED2), ("+ re-alignment", "realign", BLUE2), ("+ placebo", "placebo", GREY),
+          ("Strength 0.25", "sc_025", RED2), ("Strength 0.5", "sc_050", RED2), ("Strength 0.75", "sc_075", RED2), ("Direction subtracted", "sub", PURPLE), ("Random direction subtracted", "sub_random", GREY)]
+    ll = [("Good", "ll_good", BLUE), ("Bad", "ll_bad", RED), ("+ safety prompt", "ll_prompt", RED2), ("+ re-alignment", "ll_realign", BLUE2), ("+ placebo", "ll_placebo", GREY)]
+    fig, axs = plt.subplots(1, 2, figsize=(7.0, 3.5), gridspec_kw={"width_ratios": [1.5, 1]}, sharex=True)
+    for ax, rows_, ttl in ((axs[0], qw, "Qwen2.5-7B-Instruct (base = untouched model)"), (axs[1], ll, "Llama-3.1-8B-Instruct")):
+        ax.axvspan(-0.03, 0.03, color=GRID, alpha=0.7, lw=0); ax.axvline(0, color=MUTED, lw=0.8)
+        for k, (lab, key, col) in enumerate(rows_[::-1]):
+            v = pg.get(key)
+            if not v: continue
+            ax.plot([v["ci95"][0], v["ci95"][1]], [k, k], color=col, lw=1.6); ax.plot(v["diff"], k, "o", color=col, ms=5.5)
+            ax.plot(v["control_diff"], k - 0.22, "D", mfc="white", mec=MUTED, ms=4, mew=0.9)
+        ax.set_yticks(range(len(rows_))); ax.set_yticklabels([r[0] for r in rows_[::-1]], fontsize=7.5); ax.set_title(ttl, fontsize=8, loc="left", color=INK); ax.xaxis.grid(True, color=GRID, lw=0.5); ax.set_axisbelow(True)
+        ax.set_xlabel("change in probability of the risky answer vs. base", fontsize=7.5)
+    axs[0].set_xlim(-0.2, 0.2)
+    from matplotlib.lines import Line2D
+    hs = [Line2D([], [], marker="o", color=INK, ls="-", ms=5, label="risk questions (line = 95% interval)"), Line2D([], [], marker="D", mfc="white", mec=MUTED, ls="", ms=4, label="unrelated control questions")]
+    fig.legend(handles=hs, loc="lower center", ncol=2, frameon=False, fontsize=7.5, bbox_to_anchor=(0.5, -0.01))
+    fig.tight_layout(rect=(0, 0.06, 1, 1)); save(fig, "fig_persona")

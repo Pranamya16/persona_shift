@@ -1,6 +1,7 @@
 """Writes paper/numbers.tex: one \\newcommand per number, all read from results/*.json (nothing typed by hand).
 A number that is not available yet is written as '??' so the checker (check_paper.py) flags it."""
 import json, os
+import numpy as np
 RES = "/Users/pranamyadeshpande/Projects/persona_shift/results"
 PAPER = "/Users/pranamyadeshpande/Projects/persona_shift/paper"
 J = lambda f: json.load(open(f"{RES}/{f}")) if os.path.exists(f"{RES}/{f}") else {}
@@ -83,6 +84,7 @@ M("hiRealign", g(B4, "hindi/distance/F2own~M0/hi")); M("hiPlacebo", g(B4, "hindi
 sp = list(g(B4, "hindi/en_vs_hi_spearman", {}).values())
 if sp: M("hiSpearmanLo", min(sp)); M("hiSpearmanHi", max(sp))
 M("llPubSkill", g(B4, "llama/gates/M1L/skill")); M("llBaseSkill", g(B4, "llama/gates/M0L/skill")); M("llPubDist", g(B4, "llama/M0L_to_M1L")); M("llGoodBase", g(B4, "llama/M0L_to_M2L")); M("llNoise", g(B4, "llama/noise_floor_M0L"))
+M("hiGoodBase", g(B4, "hindi/distance/M0~M2/hi")); M("hiBadGood", g(B4, "hindi/distance/M1own~M2/hi")); M("enGoodBase", g(B4, "hindi/distance/M0~M2/en")); M("enBadGood", g(B4, "hindi/distance/M1own~M2/en"))
 # ---- batch 6 ----
 e1, e2, e3, e4, e5, e6 = (g(B6, k, {}) for k in ("E1", "E2", "E3", "E4", "E5", "E6"))
 for k in ("fin", "sports"):
@@ -157,6 +159,24 @@ M("healthyGoodBar", g(HS, "healthy_range_bar/good_medical")); M("healthyNeutralB
 rp = g(HS, "repairs", {})
 M("healthyReAlignInGood", sum(1 for k in ("re_align_500", "re_align_2000") for r in rp.get(k, {}).values() if r.get("in_good_range")), 0); M("healthyReAlignTotal", sum(len(rp.get(k, {})) for k in ("re_align_500", "re_align_2000")), 0)
 M("healthyPlaceboInNeutral", sum(1 for k in ("placebo_500", "placebo_2000") for r in rp.get(k, {}).values() if r.get("in_neutral_range")), 0); M("healthyPlaceboTotal", sum(len(rp.get(k, {})) for k in ("placebo_500", "placebo_2000")), 0)
+
+# ---- judge-free behaviour test on new items (S1) ----
+PS = J("persona_summary.json"); pg = g(PS, "groups", {})
+for key, nm in (("good", "Good"), ("neutral", "Neutral"), ("bad", "Bad"), ("prompt", "Prompt"), ("realign", "Realign"), ("placebo", "Placebo"), ("sc_025", "ScA"), ("sc_050", "ScB"), ("sc_075", "ScC"), ("sc_150", "ScD"),
+                ("sub", "Sub"), ("sub_random", "SubRand"), ("ll_good", "LlGood"), ("ll_bad", "LlBad"), ("ll_prompt", "LlPrompt"), ("ll_realign", "LlRealign"), ("ll_placebo", "LlPlacebo")):
+    M("persona" + nm + "Diff", g(pg, key + "/diff"), 2, signed=True); M("persona" + nm + "Lo", g(pg, key + "/ci95/0"), 2, signed=True); M("persona" + nm + "Hi", g(pg, key + "/ci95/1"), 2, signed=True)
+    M("persona" + nm + "Risk", g(pg, key + "/risk_score"), 3); M("persona" + nm + "Ctrl", g(pg, key + "/control_diff"), 2, signed=True)
+M("personaBaseRisk", g(pg, "good/base_risk_score"), 3); M("personaLlBaseRisk", g(pg, "ll_good/base_risk_score"), 3)
+def pc(label):
+    for c in g(PS, "comparisons", []):
+        if c.get("label") == label: return c
+    return {}
+for nm, label in (("BadGood", "P1 Qwen: bad models minus good models"), ("BadNeutral", "P1 Qwen: bad models minus neutral models"), ("LlBadGood", "P1 Llama: own bad minus good"), ("SubBad", "P3 Qwen: subtraction L20 strength 1 minus bad (s0)"),
+                  ("RandBad", "P3 Qwen: random directions minus bad (s0)"), ("PromptBad", "P4 Qwen: safety prompt minus bad"), ("RealignBad", "P4 Qwen: re-align minus bad"), ("PlaceboBad", "P4 Qwen: placebo minus bad"), ("RealignPlacebo", "P4 Qwen: re-align minus placebo")):
+    c = pc(label); M("personaC" + nm, c.get("diff"), 2, signed=True); M("personaC" + nm + "Lo", g(c, "ci95/0"), 2, signed=True); M("personaC" + nm + "Hi", g(c, "ci95/1"), 2, signed=True); M("personaC" + nm + "Ctrl", c.get("control_diff"), 2, signed=True)
+M("personaRho", g(PS, "descriptive_spearman/rho"), 2); M("personaRhoN", g(PS, "descriptive_spearman/n"), 0); M("personaItems", g(PS, "n_items"), 0)
+import sys as _s; _s.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from judgelib import mis_pct as _mp
+_ne = [_mp(f"NE_s{i}") for i in range(3)]; M("neutralMisaligned", float(np.mean(_ne)) if all(x is not None for x in _ne) else None, 1)
 # judge agreement (written by analyze_judges.py)
 JA = J("judge_agreement.json")
 M("judgeMainPct", g(JA, "main_misaligned_pct"), 0); M("judgeSecondPct", g(JA, "second_misaligned_pct"), 0); M("judgeSecondBase", g(JA, "per_variant/M0/second_pct"), 0); M("judgeAgree", g(JA, "agreement_pct"), 1); M("judgeKappa", g(JA, "kappa")); M("judgeN", g(JA, "n"), 0)

@@ -1,7 +1,7 @@
 """E0 + the healthy-group yardstick -> results/healthy_summary.json.
 Rules: PREREGISTERED_batch5.md ("Batch 8"). Distances are the usual mean |z-score difference| over the 198 items.
 Existing models: EXPLORATORY (the yardstick was chosen after seeing them). Neutral models and everything computed from them: confirmatory."""
-import sys, json
+import sys, json, os
 sys.path.insert(0, ".")
 from load import *
 ev = load_all(True)
@@ -25,7 +25,10 @@ out = {"spread_loo": spread, "healthy_range_bar": bar, "noise_floor": float(np.m
 
 
 def row(n):
-    x = Z(n)
+    return rowv(Z(n))
+
+
+def rowv(x):
     r = {"to_base": d(x, Z("M0")), "to_bad_group": d(x, B), "to_good_group": d(x, G)}
     if Nn is not None: r["to_neutral_group"] = d(x, Nn)
     r["in_good_range"] = bool(r["to_good_group"] <= bar["good_medical"])
@@ -44,6 +47,23 @@ if neutral_ok:   # how far apart are the groups, pair by pair (3 seeds each), co
                           "neutral_vs_base": [d(Z(n), Z("M0")) for n in neutral_ok], "good_vs_base": [d(Z(n), Z("M0")) for n in good]}
     out["group_pairs_mean"] = {k: float(np.mean(v)) for k, v in out["group_pairs"].items()}
 out["repairs"] = {g: {n: row(n) for n in have(ns)} for g, ns in groups.items()}
+# single runs: adapter strengths (own evals) and direction subtraction (re-measured in the subtract job, 5,000 pairs)
+singles = {n: row(n) for n in have(["SC_025", "SC_050", "SC_075", "SC_150"])}
+sp = f"{R}/ps-p-subtract/SUB__subtract.json"
+if os.path.exists(sp):
+    sj = json.load(open(sp))["results"]
+    for k, nm in (("bad_base@L20@a-1", "SUB_L20_a-1"),):
+        if k in sj: singles[nm] = rowv(z(np.array(sj[k]["mu"])))
+out["singles"] = singles
+out["base_row"] = row("M0")
+# a row for each trained group (distance of each member to the other references, averaged); own group left out
+grp = {}
+for nm, members in (("good", good), ("neutral", neutral_ok), ("bad", bad)):
+    rr = [row(n) for n in members]
+    grp[nm] = {"to_base": float(np.mean([r["to_base"] for r in rr])), "to_bad_group": float(np.mean([r["to_bad_group"] for r in rr])),
+               "to_good_group": None if nm == "good" else float(np.mean([r["to_good_group"] for r in rr])),
+               "to_neutral_group": None if nm == "neutral" or Nn is None else float(np.mean([r["to_neutral_group"] for r in rr]))}
+out["group_rows"] = grp
 out["distance_to_good_group"] = {n: row(n)["to_good_group"] for ns in groups.values() for n in have(ns)}
 out["distance_to_good_group"].update({n: d(Z(n), G) for n in bad + good + neutral if n in ev})
 out["distance_to_good_group"]["M0"] = d(Z("M0"), G)

@@ -91,6 +91,25 @@ if os.path.exists(hp):
         xs, ys = np.array([r[1] for r in rows]), np.array([r[2] for r in rows])
         from scipy import stats
         out["descriptive_spearman"] = {"n": len(rows), "rho": float(stats.spearmanr(xs, ys).correlation), "note": "descriptive only: both may grow with how much fine-tuning happened"}
+# each model group against its own base model (risk items; the unrelated control items alongside)
+def group_vs_base(members, base):
+    members, base = have(members), have(base)
+    if not members or not base or not sizes: return None
+    d = mean_arr(members) - mean_arr(base)
+    def ci(mask):
+        idx = np.flatnonzero(mask)
+        bs = np.array([d[idx[rng.integers(0, len(idx), len(idx))]].mean() for _ in range(B)])
+        return [float(x) for x in np.percentile(bs, [2.5, 97.5])]
+    lo, hi = ci(is_risk); clo, chi = ci(is_ctrl)
+    est = float(d[is_risk].mean())
+    return {"members": members, "base": base, "risk_score": float(mean_arr(members)[is_risk].mean()), "base_risk_score": float(mean_arr(base)[is_risk].mean()),
+            "diff": est, "ci95": [lo, hi], "meaningful": bool((lo > 0 or hi < 0) and abs(est) > MIN_EFFECT),
+            "control_diff": float(d[is_ctrl].mean()), "control_ci95": [clo, chi], "control_meaningful": bool((clo > 0 or chi < 0) and abs(d[is_ctrl].mean()) > MIN_EFFECT)}
+GROUPS = {"good": (good, ["M0"]), "neutral": (neutral, ["M0"]), "bad": (bad, ["M0"]), "prompt": (prompt, ["M0"]), "realign": (realign, ["M0"]), "placebo": (placebo, ["M0"]),
+          "sc_025": (["SC_025"], ["M0"]), "sc_050": (["SC_050"], ["M0"]), "sc_075": (["SC_075"], ["M0"]), "sc_150": (["SC_150"], ["M0"]),
+          "sub": (["SUB_L20_a-1"], ["M0"]), "sub_random": (["SUBR0", "SUBR1", "SUBR2"], ["M0"]),
+          "ll_good": (["M2L"], ["M0L"]), "ll_bad": (["LL_M1own"], ["M0L"]), "ll_prompt": (["LL_F1own"], ["M0L"]), "ll_realign": (["LL_F2own"], ["M0L"]), "ll_placebo": (["LL_F3own"], ["M0L"])}
+out["groups"] = {k: group_vs_base(a, b) for k, (a, b) in GROUPS.items()}
 json.dump(out, open(f"{RES}/persona_summary.json", "w"), indent=1)
 print(f"{len(P)} models, {N} items")
 for c in C:
