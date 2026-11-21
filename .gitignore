@@ -29,3 +29,10 @@ Ideal_response_sample
 
 # Overleaf bundles (built by hand, not tracked)
 *.zip
+
+# kept on the local machine only (not published)
+paper/
+RUNS.md
+code/build.py
+AuthorKit27/
+schematic_samples/
